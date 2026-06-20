@@ -1,6 +1,7 @@
 # dev 마이크로서비스 10종 — 범용 차트를 서비스별로 인스턴스화
+# tag는 CI가 git SHA로 bump (ECR IMMUTABLE → latest 불가). 초기값 bootstrap.
 # roleArn/dbSecret는 Terraform 출력과 1:1 (role명은 DB명 기준: user→users 등)
-# <ACCOUNT_ID>는 실제 계정 ID로 치환 (terraform output irsa_app_role_arns 로 확인)
+# <ACCOUNT_ID>는 실제 계정 ID로 치환 (terraform output irsa_app_role_arns)
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
@@ -11,16 +12,16 @@ spec:
   generators:
     - list:
         elements:
-          - { name: auth,         roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-auth",         dbSecret: "candle/dev/rds/auth" }
-          - { name: user,         roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-users",        dbSecret: "candle/dev/rds/users" }
-          - { name: trading,      roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-trading",      dbSecret: "candle/dev/rds/trading" }
-          - { name: portfolio,    roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-portfolio",    dbSecret: "candle/dev/rds/portfolio" }
-          - { name: ranking,      roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-ranking",      dbSecret: "candle/dev/rds/ranking" }
-          - { name: mission,      roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-mission",      dbSecret: "candle/dev/rds/mission" }
-          - { name: learning,     roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-learning",     dbSecret: "candle/dev/rds/learning" }
-          - { name: market,       roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-market",       dbSecret: "candle/dev/timescale/market" }
-          - { name: notification, roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-notification", dbSecret: "" }
-          - { name: bff,          roleArn: "",                                                       dbSecret: "" }
+          - { name: auth,         tag: bootstrap, roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-auth",         dbSecret: "candle/dev/rds/auth" }
+          - { name: user,         tag: bootstrap, roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-users",        dbSecret: "candle/dev/rds/users" }
+          - { name: trading,      tag: bootstrap, roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-trading",      dbSecret: "candle/dev/rds/trading" }
+          - { name: portfolio,    tag: bootstrap, roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-portfolio",    dbSecret: "candle/dev/rds/portfolio" }
+          - { name: ranking,      tag: bootstrap, roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-ranking",      dbSecret: "candle/dev/rds/ranking" }
+          - { name: mission,      tag: bootstrap, roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-mission",      dbSecret: "candle/dev/rds/mission" }
+          - { name: learning,     tag: bootstrap, roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-learning",     dbSecret: "candle/dev/rds/learning" }
+          - { name: market,       tag: bootstrap, roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-market",       dbSecret: "candle/dev/timescale/market" }
+          - { name: notification, tag: bootstrap, roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-notification", dbSecret: "" }
+          - { name: bff,          tag: bootstrap, roleArn: "",                                                       dbSecret: "" }
   template:
     metadata:
       name: "svc-{{ .name }}"
@@ -36,7 +37,7 @@ spec:
             namespace: candle
             image:
               repository: "<ECR>/candle/{{ .name }}"
-              tag: dev-latest
+              tag: "{{ .tag }}"
             serviceAccount:
               roleArn: "{{ .roleArn }}"
             dbSecret: "{{ .dbSecret }}"
