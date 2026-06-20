@@ -1,0 +1,32 @@
+# WebSocket 전용 인터넷 ALB — ws.<domain> → BFF (WS는 HTTP API Gateway로 못 감)
+# AWS LB Controller가 이 Ingress로 인터넷 ALB를 생성한다.
+# - 인증서는 host(ws.<domain>)와 매칭되는 ACM을 컨트롤러가 자동탐색
+#   (Terraform이 발급한 ws 인증서. certificate-arn 명시 불필요)
+# - external-dns가 host 레코드를 ALB로 자동 생성
+# - idle-timeout 상향(긴 WS 연결) + WS는 ALB가 네이티브 지원
+# host/도메인은 base=dev, prod는 overlays/prod에서 패치
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ws
+  namespace: candle
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+    alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds=300
+    external-dns.alpha.kubernetes.io/hostname: ws.dev.candle.io
+spec:
+  rules:
+    - host: ws.dev.candle.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: bff
+                port:
+                  number: 80

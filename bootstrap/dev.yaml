@@ -1,0 +1,27 @@
+# app-of-apps 루트 (dev 클러스터 ArgoCD에 1회 적용)
+# platform/applications 에서 dev용 child Application/ApplicationSet만 골라 생성.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: candle-root
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: candle
+  source:
+    repoURL: https://github.com/candle/candle-k8s.git
+    targetRevision: main
+    path: platform/applications
+    directory:
+      recurse: false
+      include: "{istio.yaml,strimzi.yaml,observability.yaml,platform-config-dev.yaml,services-dev.yaml}"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

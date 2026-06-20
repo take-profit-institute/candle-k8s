@@ -1,0 +1,6 @@
+apiVersion: v2
+name: candle-service
+description: Candle 마이크로서비스 범용 차트 (Deployment/Service/SA/HPA/ExternalSecret)
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

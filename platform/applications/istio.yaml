@@ -1,0 +1,89 @@
+# Istio service mesh — base → istiod → ingress gateway (sync wave 순서)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: istio-base
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: candle
+  source:
+    repoURL: https://istio-release.storage.googleapis.com/charts
+    chart: base
+    targetRevision: 1.23.2
+    helm:
+      values: |
+        defaultRevision: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: istio-system
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }
+    syncOptions: [CreateNamespace=true, ServerSideApply=true]
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: istiod
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: candle
+  source:
+    repoURL: https://istio-release.storage.googleapis.com/charts
+    chart: istiod
+    targetRevision: 1.23.2
+    helm:
+      values: |
+        meshConfig:
+          # Jaeger로 트레이스 전송
+          enableTracing: true
+          defaultConfig:
+            tracing:
+              zipkin:
+                address: jaeger-collector.observability.svc:9411
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: istio-system
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }
+    syncOptions: [CreateNamespace=true]
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: istio-ingressgateway
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  project: candle
+  source:
+    repoURL: https://istio-release.storage.googleapis.com/charts
+    chart: gateway
+    targetRevision: 1.23.2
+    helm:
+      # APIGW VPC Link가 붙는 "내부 NLB". 생성 후 리스너 ARN을
+      # Terraform edge_mesh_nlb_listener_arn 에 주입한다.
+      # VPC Link SG(edge_vpc_link_security_group_id) 인바운드 허용은
+      # aws-load-balancer-security-groups 애너테이션으로 환경별 지정.
+      values: |
+        service:
+          type: LoadBalancer
+          ports:
+            - name: http2
+              port: 80
+              targetPort: 8080
+          annotations:
+            service.beta.kubernetes.io/aws-load-balancer-type: external
+            service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip
+            service.beta.kubernetes.io/aws-load-balancer-scheme: internal
+            service.beta.kubernetes.io/aws-load-balancer-name: candle-mesh-ingress
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: istio-ingress
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }
+    syncOptions: [CreateNamespace=true]

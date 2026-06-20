@@ -1,0 +1,31 @@
+# Debezium Postgres 커넥터 (Outbox 패턴) — trading DB의 outbox 테이블 → Kafka
+# 서비스별로 이런 KafkaConnector를 추가한다 (auth/users/mission/...).
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaConnector
+metadata:
+  name: trading-outbox
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: debezium
+spec:
+  class: io.debezium.connector.postgresql.PostgresConnector
+  tasksMax: 1
+  config:
+    # 자격증명은 debezium-db Secret(ExternalSecret)에서 주입
+    database.hostname: ${secrets:kafka/debezium-db:host}
+    database.port: 5432
+    database.user: ${secrets:kafka/debezium-db:username}
+    database.password: ${secrets:kafka/debezium-db:password}
+    database.dbname: trading
+    topic.prefix: candle.trading
+    plugin.name: pgoutput
+    slot.name: debezium_trading
+    publication.autocreate.mode: filtered
+    table.include.list: public.outbox
+    # Outbox Event Router — outbox 행을 실제 이벤트 토픽으로 라우팅
+    transforms: outbox
+    transforms.outbox.type: io.debezium.transforms.outbox.EventRouter
+    transforms.outbox.route.topic.replacement: ${routedByValue}
+    transforms.outbox.table.field.event.key: aggregate_id
+    value.converter: org.apache.kafka.connect.json.JsonConverter
+    value.converter.schemas.enable: false

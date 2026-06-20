@@ -1,0 +1,47 @@
+# dev 마이크로서비스 10종 — 범용 차트를 서비스별로 인스턴스화
+# roleArn/dbSecret는 Terraform 출력과 1:1 (role명은 DB명 기준: user→users 등)
+# <ACCOUNT_ID>는 실제 계정 ID로 치환 (terraform output irsa_app_role_arns 로 확인)
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: candle-services-dev
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - list:
+        elements:
+          - { name: auth,         roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-auth",         dbSecret: "candle/dev/rds/auth" }
+          - { name: user,         roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-users",        dbSecret: "candle/dev/rds/users" }
+          - { name: trading,      roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-trading",      dbSecret: "candle/dev/rds/trading" }
+          - { name: portfolio,    roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-portfolio",    dbSecret: "candle/dev/rds/portfolio" }
+          - { name: ranking,      roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-ranking",      dbSecret: "candle/dev/rds/ranking" }
+          - { name: mission,      roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-mission",      dbSecret: "candle/dev/rds/mission" }
+          - { name: learning,     roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-learning",     dbSecret: "candle/dev/rds/learning" }
+          - { name: market,       roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-market",       dbSecret: "candle/dev/timescale/market" }
+          - { name: notification, roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-notification", dbSecret: "" }
+          - { name: bff,          roleArn: "",                                                       dbSecret: "" }
+  template:
+    metadata:
+      name: "svc-{{ .name }}"
+    spec:
+      project: candle
+      source:
+        repoURL: https://github.com/candle/candle-k8s.git
+        targetRevision: main
+        path: services/chart
+        helm:
+          valuesObject:
+            name: "{{ .name }}"
+            namespace: candle
+            image:
+              repository: "<ECR>/candle/{{ .name }}"
+              tag: dev-latest
+            serviceAccount:
+              roleArn: "{{ .roleArn }}"
+            dbSecret: "{{ .dbSecret }}"
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: candle
+      syncPolicy:
+        automated: { prune: true, selfHeal: true }

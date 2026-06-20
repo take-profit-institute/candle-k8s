@@ -1,0 +1,13 @@
+# gp3 StorageClass — TimescaleDB 등 StatefulSet PVC용 (EBS CSI는 Terraform이 설치)
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: gp3
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: ebs.csi.aws.com
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
+parameters:
+  type: gp3
+  encrypted: "true"

@@ -1,0 +1,31 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base
+# prod: Secrets Manager 키 경로를 candle/dev → candle/prod 로 교체
+patches:
+  - target:
+      kind: ExternalSecret
+      name: debezium-db
+    patch: |
+      - op: replace
+        path: /spec/dataFrom/0/extract/key
+        value: candle/prod/rds/debezium
+  - target:
+      kind: ExternalSecret
+      name: timescaledb-creds
+    patch: |
+      - op: replace
+        path: /spec/dataFrom/0/extract/key
+        value: candle/prod/timescale/market
+  # WS 도메인 dev → prod
+  - target:
+      kind: Ingress
+      name: ws
+    patch: |
+      - op: replace
+        path: /metadata/annotations/external-dns.alpha.kubernetes.io~1hostname
+        value: ws.candle.io
+      - op: replace
+        path: /spec/rules/0/host
+        value: ws.candle.io

@@ -1,0 +1,13 @@
+# East-West mTLS — 메시 내부 서비스 간 통신 자동 암호화 (다이어그램의 mTLS)
+# Istio 사이드카가 자동으로 mTLS 수행. STRICT = 평문 거부.
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: candle
+spec:
+  mtls:
+    mode: STRICT
+---
+# 메시 진입(ingress gateway → 서비스)은 PERMISSIVE 허용이 필요할 수 있어
+# 게이트웨이 트래픽은 별도 정책으로 관리. 여기선 candle 네임스페이스 STRICT만 적용.

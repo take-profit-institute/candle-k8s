@@ -1,0 +1,58 @@
+# Strimzi KafkaConnect (Debezium 런타임). 이름 "debezium" → SA "debezium-connect"
+# (Terraform irsa_debezium 와 매칭: namespace kafka / SA debezium-connect)
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaConnect
+metadata:
+  name: debezium
+  namespace: kafka
+  annotations:
+    strimzi.io/use-connector-resources: "true"
+spec:
+  version: 3.8.0
+  replicas: 1
+  # terraform output msk_bootstrap_brokers_iam (IAM 9098 엔드포인트)
+  bootstrapServers: <MSK_IAM_BOOTSTRAP>
+
+  build:
+    output:
+      type: docker
+      image: <ECR>/candle/debezium-connect:latest # build once → ECR
+      pushSecret: ecr-push # ECR 자격증명 secret
+    plugins:
+      - name: debezium-postgres
+        artifacts:
+          - type: tgz
+            url: https://repo1.maven.org/maven2/io/debezium/debezium-connector-postgres/2.7.3.Final/debezium-connector-postgres-2.7.3.Final-plugin.tar.gz
+      - name: msk-iam-auth
+        artifacts:
+          - type: jar
+            url: https://github.com/aws/aws-msk-iam-auth/releases/download/v2.2.0/aws-msk-iam-auth-2.2.0-all.jar
+
+  config:
+    group.id: candle-connect
+    offset.storage.topic: connect-offsets
+    config.storage.topic: connect-configs
+    status.storage.topic: connect-status
+    config.storage.replication.factor: 2
+    offset.storage.replication.factor: 2
+    status.storage.replication.factor: 2
+    key.converter: org.apache.kafka.connect.json.JsonConverter
+    value.converter: org.apache.kafka.connect.json.JsonConverter
+    # MSK IAM 인증 (클라이언트 전파)
+    security.protocol: SASL_SSL
+    sasl.mechanism: AWS_MSK_IAM
+    sasl.jaas.config: software.amazon.msk.auth.iam.IAMLoginModule required;
+    sasl.client.callback.handler.class: software.amazon.msk.auth.iam.IAMClientCallbackHandler
+    producer.security.protocol: SASL_SSL
+    consumer.security.protocol: SASL_SSL
+    admin.security.protocol: SASL_SSL
+    # k8s Secret을 커넥터 config에서 ${secrets:...} 로 참조
+    config.providers: secrets
+    config.providers.secrets.class: io.strimzi.kafka.KubernetesSecretConfigProvider
+
+  template:
+    serviceAccount:
+      metadata:
+        annotations:
+          # arn:aws:iam::<ACCOUNT_ID>:role/candle-<env>-debezium
+          eks.amazonaws.com/role-arn: <DEBEZIUM_ROLE_ARN>

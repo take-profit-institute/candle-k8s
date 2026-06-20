@@ -1,0 +1,28 @@
+# Auth outbox — UserCreated 등
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaConnector
+metadata:
+  name: auth-outbox
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: debezium
+spec:
+  class: io.debezium.connector.postgresql.PostgresConnector
+  tasksMax: 1
+  config:
+    database.hostname: ${secrets:kafka/debezium-db:host}
+    database.port: 5432
+    database.user: ${secrets:kafka/debezium-db:username}
+    database.password: ${secrets:kafka/debezium-db:password}
+    database.dbname: auth
+    topic.prefix: candle.auth
+    plugin.name: pgoutput
+    slot.name: debezium_auth
+    publication.autocreate.mode: filtered
+    table.include.list: public.outbox
+    transforms: outbox
+    transforms.outbox.type: io.debezium.transforms.outbox.EventRouter
+    transforms.outbox.route.topic.replacement: ${routedByValue}
+    transforms.outbox.table.field.event.key: aggregate_id
+    value.converter: org.apache.kafka.connect.json.JsonConverter
+    value.converter.schemas.enable: false

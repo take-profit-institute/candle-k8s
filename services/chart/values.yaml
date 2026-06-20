@@ -1,0 +1,36 @@
+# ApplicationSet이 서비스별로 덮어쓴다.
+name: ""            # 서비스명 (= SA명, Service명)
+namespace: candle
+
+image:
+  repository: "" # <ECR>/candle/<svc>
+  tag: latest
+  pullPolicy: IfNotPresent
+
+replicas: 2
+port: 8080         # 컨테이너 포트
+servicePort: 80    # ClusterIP 포트 (메시 내부)
+
+# IRSA — 비우면 SA 애너테이션 없음 (예: bff)
+serviceAccount:
+  roleArn: ""
+
+# Secrets Manager 키 — 설정 시 ExternalSecret 생성 → <name>-db Secret으로 주입
+dbSecret: ""       # 예: candle/dev/rds/trading
+
+# 추가 평문 환경변수
+env: []
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+hpa:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 70

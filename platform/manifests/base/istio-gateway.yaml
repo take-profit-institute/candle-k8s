@@ -1,0 +1,42 @@
+# 메시 진입 Gateway — APIGW VPC Link → NLB → 이 Gateway → VirtualService(서비스별)
+apiVersion: networking.istio.io/v1
+kind: Gateway
+metadata:
+  name: candle-gateway
+  namespace: candle
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "*"
+---
+# BFF로 보내는 기본 라우팅 예시 (서비스별 VirtualService는 각 차트가 소유 가능)
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: candle-routes
+  namespace: candle
+spec:
+  hosts:
+    - "*"
+  gateways:
+    - candle-gateway
+  http:
+    - match:
+        - uri:
+            prefix: /auth
+      route:
+        - destination:
+            host: auth.candle.svc.cluster.local
+            port:
+              number: 80
+    - route:
+        - destination:
+            host: bff.candle.svc.cluster.local
+            port:
+              number: 80

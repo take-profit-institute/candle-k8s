@@ -1,0 +1,46 @@
+# prod 마이크로서비스 10종
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: candle-services-prod
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - list:
+        elements:
+          - { name: auth,         roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-prod-auth",         dbSecret: "candle/prod/rds/auth" }
+          - { name: user,         roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-prod-users",        dbSecret: "candle/prod/rds/users" }
+          - { name: trading,      roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-prod-trading",      dbSecret: "candle/prod/rds/trading" }
+          - { name: portfolio,    roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-prod-portfolio",    dbSecret: "candle/prod/rds/portfolio" }
+          - { name: ranking,      roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-prod-ranking",      dbSecret: "candle/prod/rds/ranking" }
+          - { name: mission,      roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-prod-mission",      dbSecret: "candle/prod/rds/mission" }
+          - { name: learning,     roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-prod-learning",     dbSecret: "candle/prod/rds/learning" }
+          - { name: market,       roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-prod-market",       dbSecret: "candle/prod/timescale/market" }
+          - { name: notification, roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-prod-notification", dbSecret: "" }
+          - { name: bff,          roleArn: "",                                                        dbSecret: "" }
+  template:
+    metadata:
+      name: "svc-{{ .name }}"
+    spec:
+      project: candle
+      source:
+        repoURL: https://github.com/candle/candle-k8s.git
+        targetRevision: main
+        path: services/chart
+        helm:
+          valuesObject:
+            name: "{{ .name }}"
+            namespace: candle
+            image:
+              repository: "<ECR>/candle/{{ .name }}"
+              tag: prod-latest
+            replicas: 3
+            serviceAccount:
+              roleArn: "{{ .roleArn }}"
+            dbSecret: "{{ .dbSecret }}"
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: candle
+      syncPolicy:
+        automated: { prune: true, selfHeal: true }

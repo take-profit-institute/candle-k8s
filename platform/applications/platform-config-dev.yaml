@@ -1,0 +1,19 @@
+# 직접 작성 플랫폼 매니페스트 (storageclass, secretstore, istio gateway+NLB,
+# kafka connect/connector, timescaledb) — dev overlay
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: platform-config
+  namespace: argocd
+spec:
+  project: candle
+  source:
+    repoURL: https://github.com/candle/candle-k8s.git
+    targetRevision: main
+    path: platform/manifests/overlays/dev
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: candle
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }
+    syncOptions: [CreateNamespace=true, ServerSideApply=true]
