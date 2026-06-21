@@ -12,3 +12,10 @@ spec:
     - name: http
       port: {{ .Values.servicePort }}
       targetPort: {{ .Values.port }}
+    {{- if .Values.grpc.enabled }}
+    # 포트 이름 'grpc' → Istio가 HTTP/2(gRPC) 프로토콜로 인식
+    - name: grpc
+      port: {{ .Values.grpc.servicePort }}
+      targetPort: {{ .Values.grpc.port }}
+      appProtocol: grpc
+    {{- end }}

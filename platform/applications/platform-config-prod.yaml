@@ -7,7 +7,7 @@ metadata:
 spec:
   project: candle
   source:
-    repoURL: https://github.com/candle/candle-k8s.git
+    repoURL: https://github.com/take-profit-institute/candle-k8s.git
     targetRevision: main
     path: platform/manifests/overlays/prod
   destination:

@@ -6,7 +6,7 @@ metadata:
 spec:
   description: Candle platform & services
   sourceRepos:
-    - https://github.com/candle/candle-k8s.git
+    - https://github.com/take-profit-institute/candle-k8s.git
     - https://istio-release.storage.googleapis.com/charts
     - https://strimzi.io/charts/
     - https://prometheus-community.github.io/helm-charts

@@ -8,8 +8,14 @@ image:
   pullPolicy: IfNotPresent
 
 replicas: 2
-port: 8080         # 컨테이너 포트
-servicePort: 80    # ClusterIP 포트 (메시 내부)
+port: 8080         # HTTP 컨테이너 포트 (REST/actuator)
+servicePort: 80    # ClusterIP HTTP 포트 (메시 내부)
+
+# 내부 동기 통신용 gRPC 서버 (별도 Netty 포트). BFF 같은 클라이언트 전용은 false.
+grpc:
+  enabled: false
+  port: 9090       # 컨테이너 gRPC 포트 (grpc.server.port)
+  servicePort: 9090
 
 # IRSA — 비우면 SA 애너테이션 없음 (예: bff)
 serviceAccount:
@@ -17,6 +23,9 @@ serviceAccount:
 
 # Secrets Manager 키 — 설정 시 ExternalSecret 생성 → <name>-db Secret으로 주입
 dbSecret: ""       # 예: candle/dev/rds/trading
+
+# HTTP 헬스 경로 (Spring actuator 기본). Node 등은 override (예: bff → /health)
+healthPath: /actuator/health
 
 # 추가 평문 환경변수
 env: []

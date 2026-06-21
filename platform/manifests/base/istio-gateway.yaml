@@ -32,7 +32,7 @@ spec:
             prefix: /auth
       route:
         - destination:
-            host: auth.candle.svc.cluster.local
+            host: auth-service.candle.svc.cluster.local
             port:
               number: 80
     - route:

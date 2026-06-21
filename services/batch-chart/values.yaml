@@ -1,0 +1,39 @@
+# ApplicationSet이 배치 job별로 덮어쓴다.
+name: ""
+namespace: candle
+
+image:
+  repository: "" # <ECR>/candle/<batch-module>
+  tag: latest
+  pullPolicy: IfNotPresent
+
+# Spring Batch Job 이름 (--spring.batch.job.name)
+jobName: ""
+
+# cron (k8s CronJob). timeZone은 IANA.
+schedule: "0 0 * * *"
+timeZone: "Asia/Seoul"
+
+# 도메인 서비스 SA 재사용(IRSA). 비우면 default SA.
+serviceAccountName: ""
+
+# JobRepository + 데이터용 도메인 DB secret (Secrets Manager 키). ESO가 <name>-db로 동기화.
+dbSecret: ""
+
+env: []
+
+# 동시 실행 금지 / 실패 재시도 / 완료 후 정리
+concurrencyPolicy: Forbid
+backoffLimit: 1
+restartPolicy: OnFailure
+ttlSecondsAfterFinished: 3600
+startingDeadlineSeconds: 300
+suspend: false
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: "1"
+    memory: 1Gi

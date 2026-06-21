@@ -1,0 +1,18 @@
+# 클라이언트 측 mTLS origination + gRPC 부하분산 정책 (candle 네임스페이스 전체)
+# PeerAuthentication(STRICT)=서버가 mTLS 요구, DestinationRule(ISTIO_MUTUAL)=클라이언트가 mTLS로 발신.
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: candle-mtls
+  namespace: candle
+spec:
+  host: "*.candle.svc.cluster.local"
+  trafficPolicy:
+    tls:
+      mode: ISTIO_MUTUAL # 사이드카가 발급한 인증서로 자동 mTLS
+    loadBalancer:
+      # gRPC(HTTP/2)는 요청 단위 분산 필요 → LEAST_REQUEST 권장
+      simple: LEAST_REQUEST
+    connectionPool:
+      http:
+        h2UpgradePolicy: UPGRADE # gRPC를 위해 HTTP/2 강제

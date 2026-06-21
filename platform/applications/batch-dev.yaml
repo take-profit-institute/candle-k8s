@@ -1,0 +1,43 @@
+# dev Spring Batch CronJob — 단일 batch 이미지(candle/batch), Job별 CronJob.
+# batch는 도메인 DB 직접접근 X(소유 서비스 gRPC 호출). 자체 JobRepository = candle/dev/rds/batch.
+# Job명은 micro-services docs/BATCH.md 규약: 도메인.행위.vN
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: candle-batch-dev
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - list:
+        elements:
+          - { name: reservation-execute,  tag: bootstrap, jobName: "reservation.execute.v1",   schedule: "* * * * *" }
+          - { name: reservation-expire,   tag: bootstrap, jobName: "reservation.expire.v1",    schedule: "*/10 * * * *" }
+          - { name: mission-expire,       tag: bootstrap, jobName: "mission.expire.v1",        schedule: "5 0 * * *" }
+          - { name: outbox-republish,     tag: bootstrap, jobName: "outbox.republish.v1",      schedule: "*/5 * * * *" }
+          - { name: idempotency-cleanup,  tag: bootstrap, jobName: "idempotency.cleanup.v1",   schedule: "0 4 * * *" }
+  template:
+    metadata:
+      name: "batch-{{ .name }}"
+    spec:
+      project: candle
+      source:
+        repoURL: https://github.com/take-profit-institute/candle-k8s.git
+        targetRevision: main
+        path: services/batch-chart
+        helm:
+          valuesObject:
+            name: "{{ .name }}"
+            namespace: candle
+            image:
+              repository: "<ECR>/candle/batch" # 단일 batch 이미지
+              tag: "{{ .tag }}"
+            jobName: "{{ .jobName }}"
+            schedule: "{{ .schedule }}"
+            serviceAccountName: batch
+            dbSecret: "candle/dev/rds/batch" # Spring Batch JobRepository
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: candle
+      syncPolicy:
+        automated: { prune: true, selfHeal: true }

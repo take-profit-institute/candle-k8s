@@ -9,23 +9,23 @@ spec:
   generators:
     - list:
         elements:
-          - { name: auth,         tag: bootstrap, roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-prod-auth",         dbSecret: "candle/prod/rds/auth" }
-          - { name: user,         tag: bootstrap, roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-prod-users",        dbSecret: "candle/prod/rds/users" }
-          - { name: trading,      tag: bootstrap, roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-prod-trading",      dbSecret: "candle/prod/rds/trading" }
-          - { name: portfolio,    tag: bootstrap, roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-prod-portfolio",    dbSecret: "candle/prod/rds/portfolio" }
-          - { name: ranking,      tag: bootstrap, roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-prod-ranking",      dbSecret: "candle/prod/rds/ranking" }
-          - { name: mission,      tag: bootstrap, roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-prod-mission",      dbSecret: "candle/prod/rds/mission" }
-          - { name: learning,     tag: bootstrap, roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-prod-learning",     dbSecret: "candle/prod/rds/learning" }
-          - { name: market,       tag: bootstrap, roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-prod-market",       dbSecret: "candle/prod/timescale/market" }
-          - { name: notification, tag: bootstrap, roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-prod-notification", dbSecret: "" }
-          - { name: bff,          tag: bootstrap, roleArn: "",                                                        dbSecret: "" }
+          - { name: auth-service,         tag: bootstrap, grpc: true,  roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-prod-auth",         dbSecret: "candle/prod/rds/auth" }
+          - { name: user-service,         tag: bootstrap, grpc: true,  roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-prod-users",        dbSecret: "candle/prod/rds/users" }
+          - { name: trading-service,      tag: bootstrap, grpc: true,  roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-prod-trading",      dbSecret: "candle/prod/rds/trading" }
+          - { name: portfolio-service,    tag: bootstrap, grpc: true,  roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-prod-portfolio",    dbSecret: "candle/prod/rds/portfolio" }
+          - { name: ranking-service,      tag: bootstrap, grpc: true,  roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-prod-ranking",      dbSecret: "candle/prod/rds/ranking" }
+          - { name: mission-service,      tag: bootstrap, grpc: true,  roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-prod-mission",      dbSecret: "candle/prod/rds/mission" }
+          - { name: learning-service,     tag: bootstrap, grpc: true,  roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-prod-learning",     dbSecret: "candle/prod/rds/learning" }
+          - { name: market-service,       tag: bootstrap, grpc: true,  roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-prod-market",       dbSecret: "candle/prod/timescale/market" }
+          - { name: notification-service, tag: bootstrap, grpc: true,  roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-prod-notification", dbSecret: "" }
+          - { name: bff,                  tag: bootstrap, grpc: false, healthPath: "/health", roleArn: "",                                   dbSecret: "" }
   template:
     metadata:
       name: "svc-{{ .name }}"
     spec:
       project: candle
       source:
-        repoURL: https://github.com/candle/candle-k8s.git
+        repoURL: https://github.com/take-profit-institute/candle-k8s.git
         targetRevision: main
         path: services/chart
         helm:
@@ -36,6 +36,9 @@ spec:
               repository: "<ECR>/candle/{{ .name }}"
               tag: "{{ .tag }}"
             replicas: 3
+            grpc:
+              enabled: {{ .grpc }}
+            healthPath: '{{ default "/actuator/health" .healthPath }}'
             serviceAccount:
               roleArn: "{{ .roleArn }}"
             dbSecret: "{{ .dbSecret }}"

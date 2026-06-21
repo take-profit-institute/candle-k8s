@@ -5,6 +5,7 @@ resources:
   - storageclass-gp3.yaml
   - clustersecretstore.yaml
   - peer-authentication.yaml
+  - destinationrule-mtls.yaml
   - istio-gateway.yaml
   - ws-ingress.yaml
   - externalsecret-debezium.yaml

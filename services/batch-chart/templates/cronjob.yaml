@@ -1,0 +1,46 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ .Values.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "candle-batch.labels" . | nindent 4 }}
+spec:
+  schedule: "{{ .Values.schedule }}"
+  timeZone: "{{ .Values.timeZone }}"
+  concurrencyPolicy: {{ .Values.concurrencyPolicy }}
+  startingDeadlineSeconds: {{ .Values.startingDeadlineSeconds }}
+  suspend: {{ .Values.suspend }}
+  jobTemplate:
+    spec:
+      backoffLimit: {{ .Values.backoffLimit }}
+      ttlSecondsAfterFinished: {{ .Values.ttlSecondsAfterFinished }}
+      template:
+        metadata:
+          labels:
+            {{- include "candle-batch.labels" . | nindent 12 }}
+          annotations:
+            # 배치 파드는 메시 사이드카 제외(Job 완료 후 sidecar가 남아 Job이 안 끝나는 문제 방지)
+            sidecar.istio.io/inject: "false"
+        spec:
+          restartPolicy: {{ .Values.restartPolicy }}
+          {{- if .Values.serviceAccountName }}
+          serviceAccountName: {{ .Values.serviceAccountName }}
+          {{- end }}
+          containers:
+            - name: {{ .Values.name }}
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              args:
+                - "--spring.batch.job.name={{ .Values.jobName }}"
+              {{- if .Values.dbSecret }}
+              envFrom:
+                - secretRef:
+                    name: {{ .Values.name }}-db
+              {{- end }}
+              {{- with .Values.env }}
+              env:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
+              resources:
+                {{- toYaml .Values.resources | nindent 16 }}

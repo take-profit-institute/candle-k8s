@@ -22,27 +22,54 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
-            - containerPort: {{ .Values.port }}
+            - name: http
+              containerPort: {{ .Values.port }}
+            {{- if .Values.grpc.enabled }}
+            - name: grpc
+              containerPort: {{ .Values.grpc.port }}
+            {{- end }}
           {{- if .Values.dbSecret }}
           envFrom:
             - secretRef:
                 name: {{ .Values.name }}-db
           {{- end }}
-          {{- with .Values.env }}
           env:
+            # 서비스별 server.port(8081~)를 컨테이너에서 8080으로 통일
+            - name: SERVER_PORT
+              value: "{{ .Values.port }}"
+            {{- if .Values.grpc.enabled }}
+            - name: GRPC_SERVER_PORT
+              value: "{{ .Values.grpc.port }}"
+            {{- end }}
+            {{- with .Values.env }}
             {{- toYaml . | nindent 12 }}
-          {{- end }}
+            {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-          readinessProbe:
-            httpGet:
-              path: /healthz
-              port: {{ .Values.port }}
-            initialDelaySeconds: 5
-            periodSeconds: 10
+          {{- if .Values.grpc.enabled }}
+          # gRPC 서버가 떠서 Health Check Protocol(grpc.health.v1.Health)에 응답할 때까지 대기
+          startupProbe:
+            grpc:
+              port: {{ .Values.grpc.port }}
+            failureThreshold: 30
+            periodSeconds: 5
+          {{- end }}
+          # liveness는 HTTP(Istio가 probe rewrite로 mTLS 우회) — 프로세스 생존 확인
           livenessProbe:
             httpGet:
-              path: /healthz
+              path: {{ .Values.healthPath }}
               port: {{ .Values.port }}
-            initialDelaySeconds: 15
+            initialDelaySeconds: 20
             periodSeconds: 20
+          readinessProbe:
+            {{- if .Values.grpc.enabled }}
+            # readiness는 gRPC Health Check — gRPC 서빙 가능할 때만 트래픽 수신
+            grpc:
+              port: {{ .Values.grpc.port }}
+            {{- else }}
+            httpGet:
+              path: {{ .Values.healthPath }}
+              port: {{ .Values.port }}
+            {{- end }}
+            initialDelaySeconds: 10
+            periodSeconds: 10
