@@ -15,6 +15,13 @@ spec:
       labels:
         {{- include "candle-service.selector" . | nindent 8 }}
         {{- include "candle-service.labels" . | nindent 8 }}
+      {{- if .Values.metrics.enabled }}
+      annotations:
+        # Istio prometheus merge가 앱 메트릭 위치를 알도록 (병합 후 15020 노출)
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "{{ .Values.port }}"
+        prometheus.io/path: "{{ .Values.metrics.path }}"
+      {{- end }}
     spec:
       serviceAccountName: {{ .Values.name }}
       containers:

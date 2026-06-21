@@ -27,6 +27,12 @@ dbSecret: ""       # 예: candle/dev/rds/trading
 # HTTP 헬스 경로 (Spring actuator 기본). Node 등은 override (예: bff → /health)
 healthPath: /actuator/health
 
+# Prometheus 메트릭 (Istio merge → 사이드카 15020에서 수집)
+metrics:
+  enabled: true
+  path: /actuator/prometheus  # 앱 메트릭 경로 (Node 등은 override, 예: /metrics)
+  interval: 30s
+
 # 추가 평문 환경변수
 env: []
 

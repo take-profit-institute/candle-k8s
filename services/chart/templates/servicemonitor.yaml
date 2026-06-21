@@ -1,0 +1,22 @@
+{{- if .Values.metrics.enabled }}
+# Prometheus Operator(kube-prometheus-stack)가 수집.
+# Istio merge로 앱+Envoy 메트릭이 사이드카 15020(/stats/prometheus)에 병합됨 → 거기서 스크랩.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Values.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "candle-service.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Values.name }}
+  namespaceSelector:
+    matchNames:
+      - {{ .Values.namespace }}
+  endpoints:
+    - targetPort: 15020
+      path: /stats/prometheus
+      interval: {{ .Values.metrics.interval }}
+{{- end }}

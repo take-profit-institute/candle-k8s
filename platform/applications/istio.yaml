@@ -43,6 +43,8 @@ spec:
             # k8s >=1.28 (우리 1.30) + Istio >=1.20 (우리 1.23) 필요
             ENABLE_NATIVE_SIDECARS: "true"
         meshConfig:
+          # 사이드카가 앱(/actuator/prometheus)+Envoy 메트릭을 15020에 병합(평문) → STRICT mTLS여도 스크랩 가능
+          enablePrometheusMerge: true
           # Jaeger로 트레이스 전송
           enableTracing: true
           defaultConfig:

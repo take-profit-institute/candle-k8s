@@ -108,7 +108,9 @@ CREATE TABLE outbox (
 ## 9. 관측 (로그/메트릭/트레이스)
 
 - **로그**: stdout으로(파일 X). Loki가 수집. JSON 구조화 로그 권장.
-- **메트릭**: `/actuator/prometheus` 노출(`micrometer-registry-prometheus` 의존성). kube-prometheus-stack이 수집하려면 **ServiceMonitor/PodMonitor** 또는 scrape 애너테이션 필요(현재 차트 미포함 — 필요 시 추가 요청).
+- **메트릭**: 앱은 `/actuator/prometheus` 노출 필수(`micrometer-registry-prometheus` 의존성 + `management.endpoints.web.exposure.include`에 prometheus 포함). bff(Node)는 `/metrics`.
+  - 수집은 자동: services 차트가 **ServiceMonitor** 생성 → Istio **prometheus merge**가 앱+Envoy 메트릭을 사이드카 `:15020/stats/prometheus`에 병합 → kube-prometheus-stack이 거기서 스크랩(STRICT mTLS 무관).
+  - 앱이 메트릭 경로/포트만 맞추면 됨(차트가 `prometheus.io/{scrape,port,path}` 애너테이션 자동 부여). gRPC 전용 서버 메트릭도 micrometer로 `/actuator/prometheus`에 실어야 보인다.
 - **트레이스**: Istio가 ingress/egress 스팬을 만들지만, **앱이 수신 trace 헤더(`traceparent`, `x-b3-*`)를 하위 호출에 전파**해야 Jaeger에서 끊기지 않는다.
 
 ## 10. 배치(Spring Batch) — native sidecar (적용됨)

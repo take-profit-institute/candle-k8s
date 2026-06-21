@@ -21,7 +21,7 @@ spec:
           - { name: learning-service,     tag: bootstrap, grpc: true,  roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-learning",     dbSecret: "candle/dev/rds/learning" }
           - { name: market-service,       tag: bootstrap, grpc: true,  roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-market",       dbSecret: "candle/dev/timescale/market" }
           - { name: notification-service, tag: bootstrap, grpc: true,  roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-notification", dbSecret: "" }
-          - { name: bff,                  tag: bootstrap, grpc: false, healthPath: "/health", roleArn: "",                                  dbSecret: "" }
+          - { name: bff,                  tag: bootstrap, grpc: false, healthPath: "/health", metricsPath: "/metrics", roleArn: "",          dbSecret: "" }
   template:
     metadata:
       name: "svc-{{ .name }}"
@@ -41,6 +41,8 @@ spec:
             grpc:
               enabled: {{ .grpc }}
             healthPath: '{{ default "/actuator/health" .healthPath }}'
+            metrics:
+              path: '{{ default "/actuator/prometheus" .metricsPath }}'
             serviceAccount:
               roleArn: "{{ .roleArn }}"
             dbSecret: "{{ .dbSecret }}"
