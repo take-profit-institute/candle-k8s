@@ -20,8 +20,9 @@ spec:
           labels:
             {{- include "candle-batch.labels" . | nindent 12 }}
           annotations:
-            # 배치 파드는 메시 사이드카 제외(Job 완료 후 sidecar가 남아 Job이 안 끝나는 문제 방지)
-            sidecar.istio.io/inject: "false"
+            # native sidecar(istiod ENABLE_NATIVE_SIDECARS)로 주입 → Job 완료 시 사이드카 자동 종료.
+            # 메시 합류로 소유 서비스 gRPC 호출에 mTLS 유지.
+            sidecar.istio.io/inject: "true"
         spec:
           restartPolicy: {{ .Values.restartPolicy }}
           {{- if .Values.serviceAccountName }}

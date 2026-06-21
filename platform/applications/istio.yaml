@@ -37,10 +37,17 @@ spec:
     targetRevision: 1.23.2
     helm:
       values: |
+        pilot:
+          env:
+            # Job(배치)도 사이드카가 자동 종료되도록 native sidecar(init container) 사용
+            # k8s >=1.28 (우리 1.30) + Istio >=1.20 (우리 1.23) 필요
+            ENABLE_NATIVE_SIDECARS: "true"
         meshConfig:
           # Jaeger로 트레이스 전송
           enableTracing: true
           defaultConfig:
+            # 앱 시작 전에 Envoy가 준비될 때까지 대기(시작 직후 외부호출 안전)
+            holdApplicationUntilProxyStarts: true
             tracing:
               zipkin:
                 address: jaeger-collector.observability.svc:9411

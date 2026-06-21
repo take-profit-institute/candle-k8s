@@ -111,19 +111,17 @@ CREATE TABLE outbox (
 - **메트릭**: `/actuator/prometheus` 노출(`micrometer-registry-prometheus` 의존성). kube-prometheus-stack이 수집하려면 **ServiceMonitor/PodMonitor** 또는 scrape 애너테이션 필요(현재 차트 미포함 — 필요 시 추가 요청).
 - **트레이스**: Istio가 ingress/egress 스팬을 만들지만, **앱이 수신 trace 헤더(`traceparent`, `x-b3-*`)를 하위 호출에 전파**해야 Jaeger에서 끊기지 않는다.
 
-## 10. ⚠️ 배치(Spring Batch) — 사이드카 vs mTLS (의사결정 필요)
+## 10. 배치(Spring Batch) — native sidecar (적용됨)
 
-현재 batch CronJob은 `sidecar.istio.io/inject: false`(Job이 끝나도 사이드카가 남아 완료 안 되는 문제 회피). 그런데:
+batch가 소유 서비스 gRPC를 호출하므로 **메시(mTLS)에 합류**해야 한다. 일반 사이드카는 Job이 끝나도
+사이드카가 살아 있어 Job이 완료되지 않는 문제가 있어, **Istio native sidecar**(init container, `restartPolicy: Always`)를 쓴다.
 
-- batch가 **소유 서비스 gRPC를 호출**(BATCH.md 규약)하면, 사이드카가 없어 **평문** → 대상의 PeerAuthentication STRICT가 **거부**한다.
-- Kafka(MSK)·DB·Redis는 메시 밖(외부 엔드포인트)이라 사이드카 없이도 IRSA/직접 접속 가능.
+- istiod: `pilot.env.ENABLE_NATIVE_SIDECARS=true` (platform/applications/istio.yaml) — k8s ≥1.28(우리 1.30)·Istio ≥1.20(우리 1.23) 충족.
+- batch CronJob: `sidecar.istio.io/inject: "true"` (services/batch-chart). Job의 main 컨테이너가 끝나면 kubelet이 native sidecar를 자동 종료 → **Job 정상 완료 + gRPC mTLS 유지**.
+- 메시 기동 순서: `holdApplicationUntilProxyStarts: true`(meshConfig 전역) — 배치 시작 직후 gRPC 호출이 Envoy 준비 전에 나가는 것 방지.
 
-선택:
-1. **Istio native sidecar 사용**(k8s ≥1.28, Istio ≥1.20 — 우리 1.30/1.23 충족): 사이드카를 init-container 형태로 주입하면 **Job이 정상 종료되면서 mTLS도 유지**. → batch에서 `inject: false` 제거하고 native sidecar 활성화 권장.
-2. batch가 gRPC를 안 쓰고 **이벤트 소비 + outbox 기록만** 하도록 설계(메시 불필요).
-3. batch 네임스페이스/워크로드만 PeerAuthentication 예외(PERMISSIVE) — 보안상 비권장.
-
-> batch가 gRPC 동기 호출을 한다면 1번을 권장. 결정되면 batch-chart의 사이드카 주입 설정을 그에 맞게 바꾼다(현재는 1번 미적용 상태이므로 그대로면 gRPC 호출이 막힘).
+> 결과: batch는 소유 서비스 gRPC(STRICT mTLS)·Kafka(MSK IAM)·자체 JobRepository DB 모두 정상 사용.
+> 주의: native sidecar는 Istio가 정상 주입되는 k8s/Istio 버전에서만 동작(버전 다운그레이드 시 재검토).
 
 ## 11. 멱등성 (IDEMPOTENCY.md 연계)
 
