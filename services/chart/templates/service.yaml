@@ -5,6 +5,12 @@ metadata:
   namespace: {{ .Values.namespace }}
   labels:
     {{- include "candle-service.labels" . | nindent 4 }}
+  {{- if .Values.albHealthcheckPath }}
+  # ALB Ingress(ws)가 이 Service의 타깃 그룹을 지정 경로로 헬스체크 (기본 "/"는 WS 서비스에서 404)
+  annotations:
+    alb.ingress.kubernetes.io/healthcheck-path: {{ .Values.albHealthcheckPath | quote }}
+    alb.ingress.kubernetes.io/success-codes: "200"
+  {{- end }}
 spec:
   selector:
     {{- include "candle-service.selector" . | nindent 4 }}

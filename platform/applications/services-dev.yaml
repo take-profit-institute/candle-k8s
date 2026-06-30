@@ -22,6 +22,9 @@ spec:
           - { name: market-service,       tag: bootstrap, grpc: true,  roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-market",       dbSecret: "candle/dev/timescale/market" }
           - { name: notification-service, tag: bootstrap, grpc: true,  roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-notification", dbSecret: "" }
           - { name: bff,                  tag: bootstrap, grpc: false, healthPath: "/health", metricsPath: "/metrics", roleArn: "",          dbSecret: "" }
+          # 종목 실시간 채팅 WS 게이트웨이 (gRPC 없음). REDIS_URL·AUTH_JWT_HMAC_SECRET·CHAT_CORS_ALLOWED_ORIGINS는
+          # chat 시크릿 번들(candle/dev/chat)로 envFrom 주입. ALB(ws ingress)가 /chat 타깃을 /actuator/health로 헬스체크.
+          - { name: chatting-service,     tag: bootstrap, grpc: false, roleArn: "",          dbSecret: "candle/dev/chat", albHealthcheckPath: "/actuator/health" }
   template:
     metadata:
       name: "svc-{{ .name }}"
@@ -46,6 +49,8 @@ spec:
             serviceAccount:
               roleArn: "{{ .roleArn }}"
             dbSecret: "{{ .dbSecret }}"
+            # ALB(ws ingress) 타깃 그룹 헬스체크 경로. 비우면 차트가 애너테이션 미생성(ALB 기본 "/").
+            albHealthcheckPath: '{{ default "" .albHealthcheckPath }}'
       destination:
         server: https://kubernetes.default.svc
         namespace: candle

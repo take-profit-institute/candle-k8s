@@ -11,6 +11,10 @@ replicas: 2
 port: 8080         # HTTP 컨테이너 포트 (REST/actuator)
 servicePort: 80    # ClusterIP HTTP 포트 (메시 내부)
 
+# ALB(ws ingress) 타깃 그룹 헬스체크 경로. 설정 시 Service에 애너테이션 생성.
+# WS 서비스(chatting-service)는 ALB 기본 "/" 헬스체크가 404라 /actuator/health로 지정 필요.
+albHealthcheckPath: ""
+
 # 내부 동기 통신용 gRPC 서버 (별도 Netty 포트). BFF 같은 클라이언트 전용은 false.
 grpc:
   enabled: false
