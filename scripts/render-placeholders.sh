@@ -8,7 +8,7 @@
 # 사용:
 #   scripts/render-placeholders.sh [dev|prod]
 # 환경변수(선택):
-#   ACCOUNT_ID(기본 348062907700) REGION(기본 ap-northeast-2)
+#   ACCOUNT_ID(기본 aws sts get-caller-identity) REGION(기본 ap-northeast-2)
 #   TF_DIR(기본 ../infrastructure/envs/<env>)  — terraform output 읽을 위치
 #   MSK_BOOTSTRAP / DEBEZIUM_ROLE_ARN          — 직접 지정 시 terraform 미사용
 #   REDIS_RANKING_HOST / REDIS_PRICE_CACHE_HOST / REDIS_MARKET_PUBSUB_HOST
@@ -18,8 +18,12 @@
 set -euo pipefail
 
 ENV="${1:-dev}"
-ACCOUNT_ID="${ACCOUNT_ID:-348062907700}"
 REGION="${REGION:-ap-northeast-2}"
+ACCOUNT_ID="${ACCOUNT_ID:-}"
+if [ -z "$ACCOUNT_ID" ] && command -v aws >/dev/null 2>&1; then
+  ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text 2>/dev/null || true)"
+fi
+ACCOUNT_ID="${ACCOUNT_ID:-348062907700}"
 ECR="${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com"
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
