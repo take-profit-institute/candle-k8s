@@ -1,5 +1,5 @@
-# Debezium Postgres 커넥터 (Outbox 패턴) — trading DB의 outbox 테이블 → Kafka
-# 서비스별로 이런 KafkaConnector를 추가한다 (auth/users/mission/...).
+# Trading outbox — 단일 candle DB. trading 도메인은 account/order_svc/reservation 3개 스키마로
+# 분리돼 각 스키마에 outbox_events 가 있다. 한 커넥터(=1 slot, 1 publication)가 3개를 함께 캡처한다.
 apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaConnector
 metadata:
@@ -16,16 +16,20 @@ spec:
     database.port: 5432
     database.user: ${secrets:kafka/debezium-db:username}
     database.password: ${secrets:kafka/debezium-db:password}
-    database.dbname: trading
+    database.dbname: candle
     topic.prefix: candle.trading
     plugin.name: pgoutput
     slot.name: debezium_trading
-    publication.autocreate.mode: filtered
-    table.include.list: public.outbox
-    # Outbox Event Router — outbox 행을 실제 이벤트 토픽으로 라우팅
+    publication.name: dbz_pub_trading
+    publication.autocreate.mode: disabled
+    table.include.list: account.outbox_events,order_svc.outbox_events,reservation.outbox_events
+    # Outbox Event Router — outbox 행을 event_type(라우팅 토픽)으로 라우팅, key=aggregate_id
     transforms: outbox
     transforms.outbox.type: io.debezium.transforms.outbox.EventRouter
+    transforms.outbox.route.by.field: event_type
     transforms.outbox.route.topic.replacement: ${routedByValue}
     transforms.outbox.table.field.event.key: aggregate_id
+    transforms.outbox.table.field.event.type: event_type
+    transforms.outbox.table.field.event.timestamp: occurred_at
     value.converter: org.apache.kafka.connect.json.JsonConverter
     value.converter.schemas.enable: false

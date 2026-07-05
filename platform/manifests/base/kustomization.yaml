@@ -10,10 +10,12 @@ resources:
   - ws-ingress.yaml
   - externalsecret-debezium.yaml
   - kafka-connect.yaml
+  # Debezium 커넥터 = 실제 outbox producer 서비스만 (단일 candle DB, 스키마별 outbox_events)
   - kafka-connector-auth.yaml
   - kafka-connector-user.yaml
   - kafka-connector-trading.yaml
-  - kafka-connector-portfolio.yaml
-  - kafka-connector-mission.yaml
-  - kafka-connector-learning.yaml
+  - kafka-connector-ranking.yaml
+  - kafka-connector-wishlist.yaml
+  - kafka-connector-stock.yaml
+  - kafka-connector-notification.yaml
   - timescaledb.yaml

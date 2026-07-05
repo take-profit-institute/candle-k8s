@@ -1,4 +1,4 @@
-# User outbox — UserUpdated 등 (DB명은 users)
+# User outbox — UserUpdated 등. 단일 candle DB의 users 스키마 user_outbox_events → Kafka.
 apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaConnector
 metadata:
@@ -14,15 +14,19 @@ spec:
     database.port: 5432
     database.user: ${secrets:kafka/debezium-db:username}
     database.password: ${secrets:kafka/debezium-db:password}
-    database.dbname: users
+    database.dbname: candle
     topic.prefix: candle.user
     plugin.name: pgoutput
     slot.name: debezium_users
-    publication.autocreate.mode: filtered
-    table.include.list: public.outbox
+    publication.name: dbz_pub_users
+    publication.autocreate.mode: disabled
+    table.include.list: users.user_outbox_events
     transforms: outbox
     transforms.outbox.type: io.debezium.transforms.outbox.EventRouter
+    transforms.outbox.route.by.field: event_type
     transforms.outbox.route.topic.replacement: ${routedByValue}
     transforms.outbox.table.field.event.key: aggregate_id
+    transforms.outbox.table.field.event.type: event_type
+    transforms.outbox.table.field.event.timestamp: occurred_at
     value.converter: org.apache.kafka.connect.json.JsonConverter
     value.converter.schemas.enable: false

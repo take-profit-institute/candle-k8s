@@ -1,9 +1,8 @@
-# Auth outbox — UserCreated 등. 단일 candle DB의 auth 스키마 outbox_events → Kafka.
-# publication 은 사전 생성(소유자 권한) 하고 커넥터는 autocreate off + 고유 publication.name 참조.
+# Stock outbox — 단일 candle DB의 stock 스키마 outbox_events → Kafka.
 apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaConnector
 metadata:
-  name: auth-outbox
+  name: stock-outbox
   namespace: kafka
   labels:
     strimzi.io/cluster: debezium
@@ -15,16 +14,13 @@ spec:
     database.port: 5432
     database.user: ${secrets:kafka/debezium-db:username}
     database.password: ${secrets:kafka/debezium-db:password}
-    # 단일 application DB (Terraform application_database_name = candle)
     database.dbname: candle
-    topic.prefix: candle.auth
+    topic.prefix: candle.stock
     plugin.name: pgoutput
-    slot.name: debezium_auth
-    # 단일 DB에 커넥터가 여러 개 → publication 이름 충돌 방지로 커넥터별 고유 이름 + 사전생성
-    publication.name: dbz_pub_auth
+    slot.name: debezium_stock
+    publication.name: dbz_pub_stock
     publication.autocreate.mode: disabled
-    table.include.list: auth.outbox_events
-    # Outbox Event Router — event_type 값(예: auth.user-created.v1)을 그대로 토픽으로 라우팅, key=aggregate_id
+    table.include.list: stock.outbox_events
     transforms: outbox
     transforms.outbox.type: io.debezium.transforms.outbox.EventRouter
     transforms.outbox.route.by.field: event_type

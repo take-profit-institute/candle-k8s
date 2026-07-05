@@ -1,8 +1,8 @@
-# Mission outbox — MissionAchieved 등
+# Notification outbox — 단일 candle DB의 notification 스키마 outbox_events → Kafka.
 apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaConnector
 metadata:
-  name: mission-outbox
+  name: notification-outbox
   namespace: kafka
   labels:
     strimzi.io/cluster: debezium
@@ -14,15 +14,19 @@ spec:
     database.port: 5432
     database.user: ${secrets:kafka/debezium-db:username}
     database.password: ${secrets:kafka/debezium-db:password}
-    database.dbname: mission
-    topic.prefix: candle.mission
+    database.dbname: candle
+    topic.prefix: candle.notification
     plugin.name: pgoutput
-    slot.name: debezium_mission
-    publication.autocreate.mode: filtered
-    table.include.list: public.outbox
+    slot.name: debezium_notification
+    publication.name: dbz_pub_notification
+    publication.autocreate.mode: disabled
+    table.include.list: notification.outbox_events
     transforms: outbox
     transforms.outbox.type: io.debezium.transforms.outbox.EventRouter
+    transforms.outbox.route.by.field: event_type
     transforms.outbox.route.topic.replacement: ${routedByValue}
     transforms.outbox.table.field.event.key: aggregate_id
+    transforms.outbox.table.field.event.type: event_type
+    transforms.outbox.table.field.event.timestamp: occurred_at
     value.converter: org.apache.kafka.connect.json.JsonConverter
     value.converter.schemas.enable: false
