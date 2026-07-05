@@ -87,17 +87,35 @@ spec:
                   name: {{ .Values.name }}-db
                   key: password
             - name: SPRING_DATASOURCE_URL
-              value: "jdbc:postgresql://$(DB_HOST):$(DB_PORT)/$(DB_NAME)"
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.name }}-db
+                  key: SPRING_DATASOURCE_URL
             - name: SPRING_DATASOURCE_USERNAME
-              value: "$(DB_USERNAME)"
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.name }}-db
+                  key: SPRING_DATASOURCE_USERNAME
             - name: SPRING_DATASOURCE_PASSWORD
-              value: "$(DB_PASSWORD)"
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.name }}-db
+                  key: SPRING_DATASOURCE_PASSWORD
             - name: {{ .Values.dbEnvPrefix }}_DB_URL
-              value: "jdbc:postgresql://$(DB_HOST):$(DB_PORT)/$(DB_NAME)"
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.name }}-db
+                  key: {{ .Values.dbEnvPrefix }}_DB_URL
             - name: {{ .Values.dbEnvPrefix }}_DB_USERNAME
-              value: "$(DB_USERNAME)"
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.name }}-db
+                  key: {{ .Values.dbEnvPrefix }}_DB_USERNAME
             - name: {{ .Values.dbEnvPrefix }}_DB_PASSWORD
-              value: "$(DB_PASSWORD)"
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.name }}-db
+                  key: {{ .Values.dbEnvPrefix }}_DB_PASSWORD
             {{- end }}
             {{- if eq .Values.name "ranking-service" }}
             - name: RANKING_REDIS_HOST
