@@ -11,6 +11,9 @@ replicas: 2
 port: 8080         # HTTP 컨테이너 포트 (REST/actuator)
 servicePort: 80    # ClusterIP HTTP 포트 (메시 내부)
 
+http:
+  enabled: true
+
 # ALB(ws ingress) 타깃 그룹 헬스체크 경로. 설정 시 Service에 애너테이션 생성.
 # WS 서비스(chatting-service)는 ALB 기본 "/" 헬스체크가 404라 /actuator/health로 지정 필요.
 albHealthcheckPath: ""
@@ -27,6 +30,7 @@ serviceAccount:
 
 # Secrets Manager 키 — 설정 시 ExternalSecret 생성 → <name>-db Secret으로 주입
 dbSecret: ""       # 예: candle/dev/rds/trading
+dbEnvPrefix: ""    # 예: TRADING → TRADING_DB_URL/USERNAME/PASSWORD도 함께 주입
 
 # HTTP 헬스 경로 (Spring actuator 기본). Node 등은 override (예: bff → /health)
 healthPath: /actuator/health

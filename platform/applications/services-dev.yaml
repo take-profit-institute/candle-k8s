@@ -1,4 +1,4 @@
-# dev 마이크로서비스 10종 — 범용 차트를 서비스별로 인스턴스화
+# dev 마이크로서비스 — 범용 차트를 서비스별로 인스턴스화
 # tag는 CI가 git SHA로 bump (ECR IMMUTABLE → latest 불가). 초기값 bootstrap.
 # roleArn/dbSecret는 Terraform 출력과 1:1 (role명은 DB명 기준: user→users 등)
 # <ACCOUNT_ID>는 실제 계정 ID로 치환 (terraform output irsa_app_role_arns)
@@ -12,19 +12,23 @@ spec:
   generators:
     - list:
         elements:
-          - { name: auth-service,         tag: bootstrap, grpc: true,  roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-auth",         dbSecret: "candle/dev/rds/auth" }
-          - { name: user-service,         tag: bootstrap, grpc: true,  roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-users",        dbSecret: "candle/dev/rds/users" }
-          - { name: trading-service,      tag: bootstrap, grpc: true,  roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-trading",      dbSecret: "candle/dev/rds/trading" }
-          - { name: portfolio-service,    tag: bootstrap, grpc: true,  roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-portfolio",    dbSecret: "candle/dev/rds/portfolio" }
-          - { name: ranking-service,      tag: bootstrap, grpc: true,  roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-ranking",      dbSecret: "candle/dev/rds/ranking" }
-          - { name: mission-service,      tag: bootstrap, grpc: true,  roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-mission",      dbSecret: "candle/dev/rds/mission" }
-          - { name: learning-service,     tag: bootstrap, grpc: true,  roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-learning",     dbSecret: "candle/dev/rds/learning" }
-          - { name: market-service,       tag: bootstrap, grpc: true,  roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-market",       dbSecret: "candle/dev/timescale/market" }
-          - { name: notification-service, tag: bootstrap, grpc: true,  roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-notification", dbSecret: "" }
-          - { name: bff,                  tag: bootstrap, grpc: false, healthPath: "/health", metricsPath: "/metrics", roleArn: "",          dbSecret: "" }
+          - { name: auth-service,         tag: bootstrap, grpc: true,  http: true,  metricsEnabled: true,  hpaEnabled: true,  roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-auth",         dbSecret: "candle/dev/rds/auth",         dbEnvPrefix: "AUTH" }
+          - { name: user-service,         tag: bootstrap, grpc: true,  http: true,  metricsEnabled: true,  hpaEnabled: true,  roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-users",        dbSecret: "candle/dev/rds/users",        dbEnvPrefix: "USER" }
+          - { name: trading-service,      tag: bootstrap, grpc: true,  http: true,  metricsEnabled: true,  hpaEnabled: true,  roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-trading",      dbSecret: "candle/dev/rds/trading",      dbEnvPrefix: "TRADING" }
+          - { name: portfolio-service,    tag: bootstrap, grpc: true,  http: true,  metricsEnabled: true,  hpaEnabled: true,  roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-portfolio",    dbSecret: "candle/dev/rds/portfolio",    dbEnvPrefix: "PORTFOLIO" }
+          - { name: ranking-service,      tag: bootstrap, grpc: true,  http: true,  metricsEnabled: true,  hpaEnabled: true,  roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-ranking",      dbSecret: "candle/dev/rds/ranking",      dbEnvPrefix: "RANKING" }
+          - { name: mission-service,      tag: bootstrap, grpc: true,  http: true,  metricsEnabled: true,  hpaEnabled: true,  roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-mission",      dbSecret: "candle/dev/rds/mission",      dbEnvPrefix: "MISSION" }
+          - { name: learning-service,     tag: bootstrap, grpc: true,  http: true,  metricsEnabled: true,  hpaEnabled: true,  roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-learning",     dbSecret: "candle/dev/rds/learning",     dbEnvPrefix: "LEARNING" }
+          - { name: market-service,       tag: bootstrap, grpc: true,  http: true,  metricsEnabled: true,  hpaEnabled: true,  roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-market",       dbSecret: "candle/dev/timescale/market", dbEnvPrefix: "MARKET" }
+          - { name: notification-service, tag: bootstrap, grpc: true,  http: true,  metricsEnabled: true,  hpaEnabled: true,  roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-notification", dbSecret: "candle/dev/rds/notification", dbEnvPrefix: "NOTIFICATION" }
+          - { name: stock-service,        tag: bootstrap, grpc: true,  http: true,  metricsEnabled: true,  hpaEnabled: true,  roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-stock",        dbSecret: "candle/dev/rds/stock",        dbEnvPrefix: "STOCK" }
+          - { name: wishlist-service,     tag: bootstrap, grpc: true,  http: true,  metricsEnabled: true,  hpaEnabled: true,  roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-wishlist",     dbSecret: "candle/dev/rds/wishlist",     dbEnvPrefix: "WISHLIST" }
+          - { name: news-service,         tag: bootstrap, grpc: true,  http: true,  metricsEnabled: true,  hpaEnabled: true,  roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-news",         dbSecret: "candle/dev/rds/news",         dbEnvPrefix: "NEWS" }
+          - { name: batch,                tag: bootstrap, replicas: 1, grpc: true,  http: false, metricsEnabled: false, hpaEnabled: false, roleArn: "arn:aws:iam::<ACCOUNT_ID>:role/candle-dev-batch",        dbSecret: "candle/dev/rds/batch",        dbEnvPrefix: "BATCH" }
+          - { name: bff,                  tag: bootstrap, grpc: false, http: true,  metricsEnabled: true,  hpaEnabled: true,  healthPath: "/health", metricsPath: "/metrics", roleArn: "",          dbSecret: "" }
           # 종목 실시간 채팅 WS 게이트웨이 (gRPC 없음). REDIS_URL·AUTH_JWT_HMAC_SECRET·CHAT_CORS_ALLOWED_ORIGINS는
           # chat 시크릿 번들(candle/dev/chat)로 envFrom 주입. ALB(ws ingress)가 /chat 타깃을 /actuator/health로 헬스체크.
-          - { name: chatting-service,     tag: bootstrap, grpc: false, roleArn: "",          dbSecret: "candle/dev/chat", albHealthcheckPath: "/actuator/health" }
+          - { name: chatting-service,     tag: bootstrap, grpc: false, http: true,  metricsEnabled: true,  hpaEnabled: true,  roleArn: "",          dbSecret: "candle/dev/chat", albHealthcheckPath: "/actuator/health" }
   template:
     metadata:
       name: "svc-{{ .name }}"
@@ -41,14 +45,21 @@ spec:
             image:
               repository: "<ECR>/candle/{{ .name }}"
               tag: "{{ .tag }}"
+            replicas: {{ default 2 .replicas }}
+            http:
+              enabled: {{ .http }}
             grpc:
               enabled: {{ .grpc }}
             healthPath: '{{ default "/actuator/health" .healthPath }}'
             metrics:
+              enabled: {{ .metricsEnabled }}
               path: '{{ default "/actuator/prometheus" .metricsPath }}'
+            hpa:
+              enabled: {{ .hpaEnabled }}
             serviceAccount:
               roleArn: "{{ .roleArn }}"
             dbSecret: "{{ .dbSecret }}"
+            dbEnvPrefix: '{{ default "" .dbEnvPrefix }}'
             # ALB(ws ingress) 타깃 그룹 헬스체크 경로. 비우면 차트가 애너테이션 미생성(ALB 기본 "/").
             albHealthcheckPath: '{{ default "" .albHealthcheckPath }}'
       destination:

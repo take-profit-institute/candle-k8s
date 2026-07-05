@@ -72,6 +72,10 @@ kubectl apply -f bootstrap/dev.yaml      # 이후 ArgoCD가 전부 동기화
 |---|---|---|
 | 서비스 SA 애너테이션 | `<ACCOUNT_ID>` | IRSA role ARN (`terraform output irsa_app_role_arns`) |
 | ClusterSecretStore | region/role | `external_secrets_role_arn` |
+| 서비스 Kafka env | `<MSK_IAM_BOOTSTRAP>` | `terraform output msk_bootstrap_brokers_iam` |
+| Ranking Redis env | `<REDIS_RANKING_HOST>` | `terraform output redis_ranking_endpoint` |
+| Market Redis env | `<REDIS_PRICE_CACHE_HOST>` | `terraform output redis_price_cache_endpoint` |
+| Wishlist Redis env | `<REDIS_MARKET_PUBSUB_HOST>` | `terraform output redis_market_pubsub_endpoint` |
 | Istio ingress NLB | `<VPC_LINK_SG>` | `terraform output edge_vpc_link_security_group_id` |
 | KafkaConnect | MSK bootstrap | `terraform output msk_bootstrap_brokers_iam` |
 | WS Ingress(ws-ingress.yaml) | (치환 불필요) | host는 overlay에서 env별 설정(dev/prod). ACM은 **host 매칭으로 LB Controller가 자동탐색** — ARN 하드코딩 안 함 |

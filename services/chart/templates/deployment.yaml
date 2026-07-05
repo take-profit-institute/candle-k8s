@@ -19,7 +19,7 @@ spec:
       annotations:
         # Istio prometheus merge가 앱 메트릭 위치를 알도록 (병합 후 15020 노출)
         prometheus.io/scrape: "true"
-        prometheus.io/port: "{{ .Values.port }}"
+        prometheus.io/port: "{{ ternary .Values.port .Values.grpc.port .Values.http.enabled }}"
         prometheus.io/path: "{{ .Values.metrics.path }}"
       {{- end }}
     spec:
@@ -29,8 +29,10 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
+            {{- if .Values.http.enabled }}
             - name: http
               containerPort: {{ .Values.port }}
+            {{- end }}
             {{- if .Values.grpc.enabled }}
             - name: grpc
               containerPort: {{ .Values.grpc.port }}
@@ -44,9 +46,118 @@ spec:
             # 서비스별 server.port(8081~)를 컨테이너에서 8080으로 통일
             - name: SERVER_PORT
               value: "{{ .Values.port }}"
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: "<MSK_IAM_BOOTSTRAP>"
             {{- if .Values.grpc.enabled }}
             - name: GRPC_SERVER_PORT
               value: "{{ .Values.grpc.port }}"
+            {{- end }}
+            {{- if .Values.dbEnvPrefix }}
+            - name: {{ .Values.dbEnvPrefix }}_SERVER_PORT
+              value: "{{ .Values.port }}"
+            {{- if .Values.grpc.enabled }}
+            - name: {{ .Values.dbEnvPrefix }}_GRPC_PORT
+              value: "{{ .Values.grpc.port }}"
+            {{- end }}
+            {{- end }}
+            {{- if and .Values.dbSecret .Values.dbEnvPrefix }}
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.name }}-db
+                  key: host
+            - name: DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.name }}-db
+                  key: port
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.name }}-db
+                  key: dbname
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.name }}-db
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.name }}-db
+                  key: password
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://$(DB_HOST):$(DB_PORT)/$(DB_NAME)"
+            - name: SPRING_DATASOURCE_USERNAME
+              value: "$(DB_USERNAME)"
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: "$(DB_PASSWORD)"
+            - name: {{ .Values.dbEnvPrefix }}_DB_URL
+              value: "jdbc:postgresql://$(DB_HOST):$(DB_PORT)/$(DB_NAME)"
+            - name: {{ .Values.dbEnvPrefix }}_DB_USERNAME
+              value: "$(DB_USERNAME)"
+            - name: {{ .Values.dbEnvPrefix }}_DB_PASSWORD
+              value: "$(DB_PASSWORD)"
+            {{- end }}
+            {{- if eq .Values.name "ranking-service" }}
+            - name: RANKING_REDIS_HOST
+              value: "<REDIS_RANKING_HOST>"
+            - name: RANKING_REDIS_PORT
+              value: "6379"
+            {{- end }}
+            {{- if eq .Values.name "market-service" }}
+            - name: SPRING_DATA_REDIS_HOST
+              value: "<REDIS_PRICE_CACHE_HOST>"
+            - name: SPRING_DATA_REDIS_PORT
+              value: "6379"
+            {{- end }}
+            {{- if eq .Values.name "wishlist-service" }}
+            - name: REDIS_URL
+              value: "rediss://<REDIS_MARKET_PUBSUB_HOST>:6379"
+            - name: NOTIFICATION_GRPC_ADDR
+              value: "notification-service:9090"
+            {{- end }}
+            {{- if eq .Values.name "news-service" }}
+            - name: STOCK_SERVICE_GRPC_ADDRESS
+              value: "static://stock-service:9090"
+            {{- end }}
+            {{- if eq .Values.name "batch" }}
+            - name: BATCH_MARKET_GRPC_TARGET
+              value: "static://market-service:9090"
+            - name: BATCH_TRADING_GRPC_TARGET
+              value: "static://trading-service:9090"
+            - name: BATCH_PORTFOLIO_GRPC_TARGET
+              value: "static://portfolio-service:9090"
+            - name: BATCH_SMOKE_ENABLED
+              value: "false"
+            {{- end }}
+            {{- if eq .Values.name "bff" }}
+            - name: GRPC_AUTH_ADDR
+              value: "auth-service:9090"
+            - name: GRPC_USER_ADDR
+              value: "user-service:9090"
+            - name: GRPC_MARKET_ADDR
+              value: "market-service:9090"
+            - name: GRPC_ACCOUNT_ADDR
+              value: "trading-service:9090"
+            - name: GRPC_PORTFOLIO_ADDR
+              value: "portfolio-service:9090"
+            - name: GRPC_RANKING_ADDR
+              value: "ranking-service:9090"
+            - name: GRPC_NOTIFICATION_ADDR
+              value: "notification-service:9090"
+            - name: GRPC_MISSION_ADDR
+              value: "mission-service:9090"
+            - name: GRPC_LEARN_ADDR
+              value: "learning-service:9090"
+            - name: GRPC_STOCK_ADDR
+              value: "stock-service:9090"
+            - name: GRPC_WISHLIST_ADDR
+              value: "wishlist-service:9090"
+            - name: GRPC_BATCH_ADDR
+              value: "batch:9090"
+            - name: GRPC_NEWS_ADDR
+              value: "news-service:9090"
             {{- end }}
             {{- with .Values.env }}
             {{- toYaml . | nindent 12 }}
@@ -61,6 +172,7 @@ spec:
             failureThreshold: 30
             periodSeconds: 5
           {{- end }}
+          {{- if .Values.http.enabled }}
           # liveness는 HTTP(Istio가 probe rewrite로 mTLS 우회) — 프로세스 생존 확인
           livenessProbe:
             httpGet:
@@ -68,6 +180,13 @@ spec:
               port: {{ .Values.port }}
             initialDelaySeconds: 20
             periodSeconds: 20
+          {{- else if .Values.grpc.enabled }}
+          livenessProbe:
+            grpc:
+              port: {{ .Values.grpc.port }}
+            initialDelaySeconds: 20
+            periodSeconds: 20
+          {{- end }}
           readinessProbe:
             {{- if .Values.grpc.enabled }}
             # readiness는 gRPC Health Check — gRPC 서빙 가능할 때만 트래픽 수신

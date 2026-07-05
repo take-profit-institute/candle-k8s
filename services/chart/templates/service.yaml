@@ -15,9 +15,11 @@ spec:
   selector:
     {{- include "candle-service.selector" . | nindent 4 }}
   ports:
+    {{- if .Values.http.enabled }}
     - name: http
       port: {{ .Values.servicePort }}
       targetPort: {{ .Values.port }}
+    {{- end }}
     {{- if .Values.grpc.enabled }}
     # 포트 이름 'grpc' → Istio가 HTTP/2(gRPC) 프로토콜로 인식
     - name: grpc
