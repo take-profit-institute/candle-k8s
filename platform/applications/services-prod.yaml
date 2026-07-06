@@ -38,34 +38,35 @@ spec:
         targetRevision: main
         path: services/chart
         helm:
-          valuesObject:
-            name: "{{ .name }}"
+          # values(문자열 블록) — ArgoCD goTemplate 렌더 후 Helm이 타입 파싱. valuesObject의 unquoted {{ }}는
+          # 유효 YAML이 아니라 파싱 불가라 values 블록으로 처리한다.
+          values: |
+            name: {{ .name }}
             namespace: candle
             image:
-              repository: "633597729239.dkr.ecr.ap-northeast-2.amazonaws.com/candle/{{ .name }}"
-              tag: "{{ .tag }}"
+              repository: 633597729239.dkr.ecr.ap-northeast-2.amazonaws.com/candle/{{ .name }}
+              tag: {{ .tag }}
             replicas: {{ default 3 .replicas }}
             http:
               enabled: {{ .http }}
             grpc:
               enabled: {{ .grpc }}
-            healthPath: '{{ default "/actuator/health" .healthPath }}'
+            healthPath: {{ default "/actuator/health" .healthPath }}
             metrics:
               enabled: {{ .metricsEnabled }}
-              path: '{{ default "/actuator/prometheus" .metricsPath }}'
+              path: {{ default "/actuator/prometheus" .metricsPath }}
             hpa:
               enabled: {{ .hpaEnabled }}
             serviceAccount:
-              roleArn: "{{ .roleArn }}"
-            dbSecret: "{{ .dbSecret }}"
-            dbEnvPrefix: '{{ default "" .dbEnvPrefix }}'
-            # ALB(ws ingress) 타깃 그룹 헬스체크 경로. 비우면 차트가 애너테이션 미생성(ALB 기본 "/").
-            albHealthcheckPath: '{{ default "" .albHealthcheckPath }}'
-            {{- if .env }}
+              roleArn: {{ .roleArn | quote }}
+            dbSecret: {{ .dbSecret | quote }}
+            dbEnvPrefix: {{ default "" .dbEnvPrefix | quote }}
+            albHealthcheckPath: {{ default "" .albHealthcheckPath | quote }}
+            {{- with .env }}
             env:
-              {{- range .env }}
+              {{- range . }}
               - name: {{ .name }}
-                value: "{{ .value }}"
+                value: {{ .value | quote }}
               {{- end }}
             {{- end }}
       destination:
