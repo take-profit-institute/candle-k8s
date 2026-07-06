@@ -21,10 +21,10 @@ metadata:
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
     alb.ingress.kubernetes.io/ssl-redirect: "443"
     alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds=300
-    external-dns.alpha.kubernetes.io/hostname: ws.dev.candle.io
+    external-dns.alpha.kubernetes.io/hostname: ws.dev.candle.io.kr
 spec:
   rules:
-    - host: ws.dev.candle.io
+    - host: ws.dev.candle.io.kr
       http:
         paths:
           - path: /chat
