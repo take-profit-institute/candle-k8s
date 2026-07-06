@@ -183,12 +183,14 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           {{- if .Values.grpc.enabled }}
-          # gRPC 서버가 떠서 Health Check Protocol(grpc.health.v1.Health)에 응답할 때까지 대기
+          # gRPC 서버가 떠서 Health Check Protocol(grpc.health.v1.Health)에 응답할 때까지 대기.
+          # timeout 여유: istio 사이드카 프록시 경유 + JVM 웜업이라 기본 1s는 부족.
           startupProbe:
             grpc:
               port: {{ .Values.grpc.port }}
-            failureThreshold: 30
+            failureThreshold: 40
             periodSeconds: 5
+            timeoutSeconds: 5
           {{- end }}
           {{- if .Values.http.enabled }}
           # liveness는 HTTP(Istio가 probe rewrite로 mTLS 우회) — 프로세스 생존 확인
@@ -198,12 +200,16 @@ spec:
               port: {{ .Values.port }}
             initialDelaySeconds: 20
             periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 6
           {{- else if .Values.grpc.enabled }}
           livenessProbe:
             grpc:
               port: {{ .Values.grpc.port }}
             initialDelaySeconds: 20
             periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 6
           {{- end }}
           readinessProbe:
             {{- if .Values.grpc.enabled }}
@@ -217,3 +223,5 @@ spec:
             {{- end }}
             initialDelaySeconds: 10
             periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
