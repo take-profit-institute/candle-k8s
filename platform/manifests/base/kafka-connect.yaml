@@ -11,12 +11,12 @@ spec:
   version: 3.8.0
   replicas: 1
   # terraform output msk_bootstrap_brokers_iam (IAM 9098 엔드포인트)
-  bootstrapServers: <MSK_IAM_BOOTSTRAP>
+  bootstrapServers: b-1.candledev.3ba4w8.c2.kafka.ap-northeast-2.amazonaws.com:9098,b-2.candledev.3ba4w8.c2.kafka.ap-northeast-2.amazonaws.com:9098
 
   build:
     output:
       type: docker
-      image: <ECR>/candle/debezium-connect:latest # build once → ECR
+      image: 633597729239.dkr.ecr.ap-northeast-2.amazonaws.com/candle/debezium-connect:latest # build once → ECR
       pushSecret: ecr-push # ECR 자격증명 secret
     plugins:
       - name: debezium-postgres
@@ -54,5 +54,5 @@ spec:
     serviceAccount:
       metadata:
         annotations:
-          # arn:aws:iam::<ACCOUNT_ID>:role/candle-<env>-debezium
-          eks.amazonaws.com/role-arn: <DEBEZIUM_ROLE_ARN>
+          # arn:aws:iam::633597729239:role/candle-<env>-debezium
+          eks.amazonaws.com/role-arn: arn:aws:iam::633597729239:role/candle-dev-debezium
