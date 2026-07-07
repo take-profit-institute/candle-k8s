@@ -11,3 +11,36 @@ spec:
 ---
 # 메시 진입(ingress gateway → 서비스)은 PERMISSIVE 허용이 필요할 수 있어
 # 게이트웨이 트래픽은 별도 정책으로 관리. 여기선 candle 네임스페이스 STRICT만 적용.
+---
+# ws 전용 ALB(=Istio 게이트웨이 미경유)는 bff/chatting 파드로 평문 접근하므로
+# 네임스페이스 STRICT면 헬스체크/트래픽이 거부돼 502가 난다.
+# → 해당 워크로드의 HTTP 포트(8080)만 PERMISSIVE 예외. gRPC(9090) 등 나머지는 STRICT 유지.
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: ws-alb-bff
+  namespace: candle
+spec:
+  selector:
+    matchLabels:
+      app: bff
+  mtls:
+    mode: STRICT
+  portLevelMtls:
+    8080:
+      mode: PERMISSIVE
+---
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: ws-alb-chatting
+  namespace: candle
+spec:
+  selector:
+    matchLabels:
+      app: chatting-service
+  mtls:
+    mode: STRICT
+  portLevelMtls:
+    8080:
+      mode: PERMISSIVE
