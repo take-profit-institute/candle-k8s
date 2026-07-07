@@ -56,6 +56,16 @@ spec:
             {{- if .Values.kafkaBootstrap }}
             - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
               value: {{ .Values.kafkaBootstrap | quote }}
+            {{- if contains ":9098" .Values.kafkaBootstrap }}
+            - name: SPRING_KAFKA_PROPERTIES_SECURITY_PROTOCOL
+              value: "SASL_SSL"
+            - name: SPRING_KAFKA_PROPERTIES_SASL_MECHANISM
+              value: "AWS_MSK_IAM"
+            - name: SPRING_KAFKA_PROPERTIES_SASL_JAAS_CONFIG
+              value: "software.amazon.msk.auth.iam.IAMLoginModule required;"
+            - name: SPRING_KAFKA_PROPERTIES_SASL_CLIENT_CALLBACK_HANDLER_CLASS
+              value: "software.amazon.msk.auth.iam.IAMClientCallbackHandler"
+            {{- end }}
             {{- end }}
             {{- if .Values.grpc.enabled }}
             - name: GRPC_SERVER_PORT
