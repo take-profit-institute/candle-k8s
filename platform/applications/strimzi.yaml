@@ -8,8 +8,10 @@ spec:
   project: candle
   source:
     repoURL: https://strimzi.io/charts/
+    # 0.45+ : KafkaConnect authentication.type=custom 지원 (MSK IAM=AWS_MSK_IAM SASL).
+    # 0.45.x 는 Kafka 3.8.0 계속 지원(0.46은 3.8 드롭 → KafkaConnect version 병행 변경 필요).
     chart: strimzi-kafka-operator
-    targetRevision: 0.43.0
+    targetRevision: 0.45.2
     helm:
       values: |
         watchNamespaces:
