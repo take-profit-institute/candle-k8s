@@ -26,15 +26,66 @@ spec:
     - "*"
   gateways:
     - candle-gateway
+  # APIGW(/api/auth/{proxy+} public, /{proxy+} JWT) → NLB → 여기서 서비스로 분기한다.
+  # (edge WebFilter는 미배포이므로 그 경로 라우팅/리라이트를 여기서 대신 수행)
+  # 매칭 순서 = 우선순위. auth-service 소유 경로만 auth로 보내고 나머지는 bff.
   http:
+    # 1) 이미 버전 프리픽스가 붙은 경로 → auth-service (경로 유지)
+    #    /api/v1/auth/** (인증), /api/v1/admin/** (관리자 계정)
     - match:
         - uri:
-            prefix: /auth
+            prefix: /api/v1/auth/
+        - uri:
+            prefix: /api/v1/admin/
       route:
         - destination:
             host: auth-service.candle.svc.cluster.local
             port:
               number: 80
+    # 2) public auth 경로(/api/auth/...) → auth-service, /api → /api/v1 리라이트
+    #    auth-service 소유 경로(providers, oauth/**, token/refresh, logout)만 화이트리스트.
+    #    /api/auth/me 등 그 외 /api/auth/* 는 아래 default(bff)로 간다.
+    - match:
+        - uri:
+            prefix: /api/auth/oauth/
+      rewrite:
+        uri: /api/v1/auth/oauth/
+      route:
+        - destination:
+            host: auth-service.candle.svc.cluster.local
+            port:
+              number: 80
+    - match:
+        - uri:
+            exact: /api/auth/providers
+      rewrite:
+        uri: /api/v1/auth/providers
+      route:
+        - destination:
+            host: auth-service.candle.svc.cluster.local
+            port:
+              number: 80
+    - match:
+        - uri:
+            exact: /api/auth/token/refresh
+      rewrite:
+        uri: /api/v1/auth/token/refresh
+      route:
+        - destination:
+            host: auth-service.candle.svc.cluster.local
+            port:
+              number: 80
+    - match:
+        - uri:
+            exact: /api/auth/logout
+      rewrite:
+        uri: /api/v1/auth/logout
+      route:
+        - destination:
+            host: auth-service.candle.svc.cluster.local
+            port:
+              number: 80
+    # 3) 그 외 전부 → bff (예: /api/auth/me, /api/account/**, /api/market/** ...)
     - route:
         - destination:
             host: bff.candle.svc.cluster.local
