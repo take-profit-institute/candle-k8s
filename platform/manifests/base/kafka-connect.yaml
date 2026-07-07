@@ -10,8 +10,21 @@ metadata:
 spec:
   version: 3.8.0
   replicas: 1
-  # terraform output msk_bootstrap_brokers_iam (IAM 9098 엔드포인트)
-  bootstrapServers: b-1.candledev.3ba4w8.c2.kafka.ap-northeast-2.amazonaws.com:9098,b-2.candledev.3ba4w8.c2.kafka.ap-northeast-2.amazonaws.com:9098
+  # SASL/SCRAM 엔드포인트(9096). Strimzi가 MSK IAM auth를 지원하지 않아 Debezium 커넥트만
+  # SCRAM으로 붙는다(앱 서비스는 계속 IAM 9098). terraform output bootstrap_brokers_sasl_scram.
+  bootstrapServers: b-1.candledev.3ba4w8.c2.kafka.ap-northeast-2.amazonaws.com:9096,b-2.candledev.3ba4w8.c2.kafka.ap-northeast-2.amazonaws.com:9096
+
+  # 전송구간 TLS(MSK client_broker=TLS). MSK 서버 인증서는 공용 Amazon CA → JVM 기본 truststore.
+  tls:
+    trustedCertificates: []
+  # SASL/SCRAM 인증 — Terraform aws_msk_scram_secret_association 로 등록한 debezium 사용자.
+  # 비밀번호는 debezium-msk-scram Secret(ExternalSecret)에서 주입.
+  authentication:
+    type: scram-sha-512
+    username: debezium
+    passwordSecret:
+      secretName: debezium-msk-scram
+      password: password
 
   build:
     output:
@@ -38,14 +51,8 @@ spec:
     status.storage.replication.factor: 2
     key.converter: org.apache.kafka.connect.json.JsonConverter
     value.converter: org.apache.kafka.connect.json.JsonConverter
-    # MSK IAM 인증 (클라이언트 전파)
-    security.protocol: SASL_SSL
-    sasl.mechanism: AWS_MSK_IAM
-    sasl.jaas.config: software.amazon.msk.auth.iam.IAMLoginModule required;
-    sasl.client.callback.handler.class: software.amazon.msk.auth.iam.IAMClientCallbackHandler
-    producer.security.protocol: SASL_SSL
-    consumer.security.protocol: SASL_SSL
-    admin.security.protocol: SASL_SSL
+    # security.protocol/sasl.* 은 위 tls+authentication 으로 Strimzi가 자동 설정한다.
+    # (spec.config 에는 sasl./security./ssl. 접두사 설정이 Strimzi에서 금지됨)
     # k8s Secret을 커넥터 config에서 ${secrets:...} 로 참조
     config.providers: secrets
     config.providers.secrets.class: io.strimzi.kafka.KubernetesSecretConfigProvider
