@@ -27,7 +27,7 @@ spec:
   mtls:
     mode: STRICT
   portLevelMtls:
-    8080:
+    "8080":
       mode: PERMISSIVE
 ---
 apiVersion: security.istio.io/v1
@@ -42,5 +42,5 @@ spec:
   mtls:
     mode: STRICT
   portLevelMtls:
-    8080:
+    "8080":
       mode: PERMISSIVE
