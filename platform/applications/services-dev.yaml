@@ -69,6 +69,7 @@ spec:
               path: {{ default "/actuator/prometheus" .metricsPath }}
             hpa:
               enabled: {{ .hpaEnabled }}
+              minReplicas: {{ default 2 .hpaMinReplicas }}
             serviceAccount:
               roleArn: {{ .roleArn | quote }}
             dbSecret: {{ .dbSecret | quote }}
@@ -91,5 +92,16 @@ spec:
       destination:
         server: https://kubernetes.default.svc
         namespace: candle
+      {{- if .hpaEnabled }}
+      ignoreDifferences:
+        - group: apps
+          kind: Deployment
+          jsonPointers:
+            - /spec/replicas
+      {{- end }}
       syncPolicy:
         automated: {prune: true, selfHeal: true}
+        {{- if .hpaEnabled }}
+        syncOptions:
+          - RespectIgnoreDifferences=true
+        {{- end }}

@@ -14,7 +14,7 @@ spec:
     path: platform/applications
     directory:
       recurse: false
-      include: "{istio.yaml,strimzi.yaml,observability.yaml,platform-config-prod.yaml,services-prod.yaml}"
+      include: "{istio.yaml,metrics-server.yaml,strimzi.yaml,observability.yaml,platform-config-prod.yaml,services-prod.yaml}"
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
