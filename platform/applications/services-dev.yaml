@@ -30,7 +30,7 @@ spec:
           - {name: bff, tag: 2baad35b8547944c87f52ac911f657cc5a7bd2b8, grpc: false, http: true, metricsEnabled: true, hpaEnabled: true, healthPath: "/health", metricsPath: "/metrics", roleArn: "", dbSecret: "", env: [{name: "AUTH_JWKS_URI", value: "http://auth-service/.well-known/jwks.json"}, {name: "AUTH_JWT_ISSUER", value: "https://api.dev.candle.io.kr"}, {name: "AUTH_JWT_AUDIENCE", value: "candle-api"}]}
           # 종목 실시간 채팅 WS 게이트웨이 (gRPC 없음). REDIS_URL·AUTH_JWT_HMAC_SECRET·CHAT_CORS_ALLOWED_ORIGINS는
           # chat 시크릿 번들(candle/dev/chat)로 envFrom 주입. ALB(ws ingress)가 /chat 타깃을 /actuator/health로 헬스체크.
-          - {name: chatting-service, tag: ad8fd2d1cd3edb41524236fa88c5ae06b9211906, grpc: false, http: true, metricsEnabled: true, hpaEnabled: true, roleArn: "", dbSecret: "candle/dev/chat", albHealthcheckPath: "/actuator/health"}
+          - {name: chatting-service, tag: 1aeecc612ac8d3a148ea71a333adb4eec7c970ff, grpc: false, http: true, metricsEnabled: true, hpaEnabled: true, roleArn: "", dbSecret: "candle/dev/chat", albHealthcheckPath: "/actuator/health"}
   template:
     metadata:
       name: "svc-{{ .name }}"
