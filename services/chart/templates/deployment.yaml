@@ -37,10 +37,17 @@ spec:
             - name: grpc
               containerPort: {{ .Values.grpc.port }}
             {{- end }}
-          {{- if .Values.dbSecret }}
+          {{- if or .Values.dbSecret .Values.appSecret }}
           envFrom:
+            {{- if .Values.dbSecret }}
             - secretRef:
                 name: {{ .Values.name }}-db
+            {{- end }}
+            {{- if .Values.appSecret }}
+            # 앱 설정 시크릿(OAuth/JWT 등) — 키가 그대로 env로 주입됨
+            - secretRef:
+                name: {{ .Values.name }}-app
+            {{- end }}
           {{- end }}
           env:
             # 서비스별 server.port(8081~)를 컨테이너에서 8080으로 통일
