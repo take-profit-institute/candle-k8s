@@ -44,6 +44,9 @@ redis:
   rankingHost: ""
   priceCacheHost: ""
   marketPubsubHost: ""
+  connectTimeout: 1s
+  timeout: 1s
+  healthEnabled: "false"
 
 # HTTP 헬스 경로 (Spring actuator 기본). Node 등은 override (예: bff → /health)
 healthPath: /actuator/health

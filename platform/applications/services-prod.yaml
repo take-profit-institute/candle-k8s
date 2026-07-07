@@ -73,16 +73,12 @@ spec:
       destination:
         server: https://kubernetes.default.svc
         namespace: candle
-      {{- if .hpaEnabled }}
       ignoreDifferences:
         - group: apps
           kind: Deployment
           jsonPointers:
             - /spec/replicas
-      {{- end }}
       syncPolicy:
         automated: { prune: true, selfHeal: true }
-        {{- if .hpaEnabled }}
         syncOptions:
           - RespectIgnoreDifferences=true
-        {{- end }}

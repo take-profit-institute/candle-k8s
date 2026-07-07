@@ -156,6 +156,12 @@ spec:
               value: {{ .Values.redis.priceCacheHost | quote }}
             - name: SPRING_DATA_REDIS_PORT
               value: "6379"
+            - name: SPRING_DATA_REDIS_CONNECT_TIMEOUT
+              value: {{ .Values.redis.connectTimeout | quote }}
+            - name: SPRING_DATA_REDIS_TIMEOUT
+              value: {{ .Values.redis.timeout | quote }}
+            - name: MANAGEMENT_HEALTH_REDIS_ENABLED
+              value: {{ .Values.redis.healthEnabled | quote }}
             {{- end }}
             {{- end }}
             {{- if eq .Values.name "wishlist-service" }}
