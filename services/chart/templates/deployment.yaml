@@ -218,12 +218,23 @@ spec:
           {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-          {{- if .Values.grpc.enabled }}
+          {{- $grpcHealth := and .Values.grpc.enabled .Values.grpc.health }}
+          {{- if $grpcHealth }}
           # gRPC 서버가 떠서 Health Check Protocol(grpc.health.v1.Health)에 응답할 때까지 대기.
           # timeout 여유: istio 사이드카 프록시 경유 + JVM 웜업이라 기본 1s는 부족.
           startupProbe:
             grpc:
               port: {{ .Values.grpc.port }}
+            failureThreshold: 40
+            periodSeconds: 5
+            timeoutSeconds: 5
+          {{- else if .Values.http.enabled }}
+          # gRPC 헬스 서비스가 없는(grpc.health=false) 서비스 → HTTP(actuator)로 기동 대기.
+          # gRPC Service 포트는 유지되므로 클라이언트(BFF 등)는 계속 gRPC로 호출 가능.
+          startupProbe:
+            httpGet:
+              path: {{ .Values.healthPath }}
+              port: {{ .Values.port }}
             failureThreshold: 40
             periodSeconds: 5
             timeoutSeconds: 5
@@ -238,7 +249,7 @@ spec:
             periodSeconds: 20
             timeoutSeconds: 5
             failureThreshold: 6
-          {{- else if .Values.grpc.enabled }}
+          {{- else if $grpcHealth }}
           livenessProbe:
             grpc:
               port: {{ .Values.grpc.port }}
@@ -248,7 +259,7 @@ spec:
             failureThreshold: 6
           {{- end }}
           readinessProbe:
-            {{- if .Values.grpc.enabled }}
+            {{- if $grpcHealth }}
             # readiness는 gRPC Health Check — gRPC 서빙 가능할 때만 트래픽 수신
             grpc:
               port: {{ .Values.grpc.port }}

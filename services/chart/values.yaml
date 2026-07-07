@@ -23,6 +23,10 @@ grpc:
   enabled: false
   port: 9090       # 컨테이너 gRPC 포트 (grpc.server.port)
   servicePort: 9090
+  # 앱이 표준 gRPC 헬스 서비스(grpc.health.v1.Health)를 등록하는가.
+  # false면 gRPC Service 포트는 유지하되 startup/readiness probe는 HTTP(actuator)로 대체한다.
+  # (헬스 서비스 미구현 서비스가 gRPC probe UNIMPLEMENTED로 무한 재기동되는 것 방지)
+  health: true
 
 # IRSA — 비우면 SA 애너테이션 없음 (예: bff)
 serviceAccount:

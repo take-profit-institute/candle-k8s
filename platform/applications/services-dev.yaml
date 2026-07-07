@@ -17,13 +17,19 @@ spec:
           - {name: trading-service, tag: 1aeecc612ac8d3a148ea71a333adb4eec7c970ff, grpc: true, http: true, metricsEnabled: true, hpaEnabled: true, roleArn: "arn:aws:iam::633597729239:role/candle-dev-trading", dbSecret: "candle/dev/rds/trading", dbEnvPrefix: "TRADING"}
           - {name: portfolio-service, tag: 1aeecc612ac8d3a148ea71a333adb4eec7c970ff, grpc: true, http: true, metricsEnabled: true, hpaEnabled: true, roleArn: "arn:aws:iam::633597729239:role/candle-dev-portfolio", dbSecret: "candle/dev/rds/portfolio", dbEnvPrefix: "PORTFOLIO"}
           - {name: ranking-service, tag: 1aeecc612ac8d3a148ea71a333adb4eec7c970ff, grpc: true, http: true, metricsEnabled: true, hpaEnabled: true, roleArn: "arn:aws:iam::633597729239:role/candle-dev-ranking", dbSecret: "candle/dev/rds/ranking", dbEnvPrefix: "RANKING"}
-          - {name: mission-service, tag: 1aeecc612ac8d3a148ea71a333adb4eec7c970ff, grpc: true, http: true, metricsEnabled: true, hpaEnabled: true, roleArn: "arn:aws:iam::633597729239:role/candle-dev-mission", dbSecret: "candle/dev/rds/mission", dbEnvPrefix: "MISSION"}
+          # mission은 gRPC 서버가 없어(HTTP 전용) grpc:true 로 두면 gRPC startupProbe(9090)가
+          # 200s 예산 내 통과 못해 kill→재기동 무한루프. bff/chatting 처럼 http 전용으로 처리.
+          # (추후 실제 gRPC 서버 구현 시 grpc:true 로 되돌린다)
+          - {name: mission-service, tag: 1aeecc612ac8d3a148ea71a333adb4eec7c970ff, grpc: false, http: true, metricsEnabled: true, hpaEnabled: true, roleArn: "arn:aws:iam::633597729239:role/candle-dev-mission", dbSecret: "candle/dev/rds/mission", dbEnvPrefix: "MISSION"}
           - {name: learning-service, tag: 1aeecc612ac8d3a148ea71a333adb4eec7c970ff, grpc: true, http: true, metricsEnabled: true, hpaEnabled: true, roleArn: "arn:aws:iam::633597729239:role/candle-dev-learning", dbSecret: "candle/dev/rds/learning", dbEnvPrefix: "LEARNING"}
           - {name: market-service, tag: 1aeecc612ac8d3a148ea71a333adb4eec7c970ff, grpc: true, http: true, metricsEnabled: true, hpaEnabled: true, roleArn: "arn:aws:iam::633597729239:role/candle-dev-market", dbSecret: "candle/dev/timescale/market", dbEnvPrefix: "MARKET", appSecret: "candle/dev/market"}
           - {name: notification-service, tag: 1aeecc612ac8d3a148ea71a333adb4eec7c970ff, grpc: true, http: true, metricsEnabled: true, hpaEnabled: true, roleArn: "arn:aws:iam::633597729239:role/candle-dev-notification", dbSecret: "candle/dev/rds/notification", dbEnvPrefix: "NOTIFICATION", firebaseCredentialsSecret: "notification-firebase"}
           - {name: stock-service, tag: 1aeecc612ac8d3a148ea71a333adb4eec7c970ff, grpc: true, http: true, metricsEnabled: true, hpaEnabled: true, roleArn: "arn:aws:iam::633597729239:role/candle-dev-stock", dbSecret: "candle/dev/rds/stock", dbEnvPrefix: "STOCK", appSecret: "candle/dev/stock"}
           - {name: wishlist-service, tag: 1aeecc612ac8d3a148ea71a333adb4eec7c970ff, grpc: true, http: true, metricsEnabled: true, hpaEnabled: true, roleArn: "arn:aws:iam::633597729239:role/candle-dev-wishlist", dbSecret: "candle/dev/rds/wishlist", dbEnvPrefix: "WISHLIST"}
-          - {name: news-service, tag: 1aeecc612ac8d3a148ea71a333adb4eec7c970ff, grpc: true, http: true, metricsEnabled: true, hpaEnabled: true, roleArn: "arn:aws:iam::633597729239:role/candle-dev-news", dbSecret: "candle/dev/rds/news", dbEnvPrefix: "NEWS"}
+          # news는 gRPC 서버는 뜨지만 grpc.health.v1.Health 를 등록하지 않아 gRPC probe가
+          # UNIMPLEMENTED로 실패→재기동 무한루프. gRPC Service 포트(9090)는 유지하되(=BFF가 계속 호출)
+          # startup/readiness probe만 HTTP(actuator)로 전환. (앱에서 gRPC 헬스 서비스 켜면 grpcHealth 제거)
+          - {name: news-service, tag: 1aeecc612ac8d3a148ea71a333adb4eec7c970ff, grpc: true, grpcHealth: false, http: true, metricsEnabled: true, hpaEnabled: true, roleArn: "arn:aws:iam::633597729239:role/candle-dev-news", dbSecret: "candle/dev/rds/news", dbEnvPrefix: "NEWS"}
           # batch는 상시 gRPC 서버(replica=1, HPA off). 스케줄은 앱 내부 @Scheduled가 담당(CronJob 아님).
           # 스케줄러 단일 실행 보장을 위해 replica=1 고정. 필요한 잡만 BATCH_*_ENABLED로 켠다.
           - {name: batch, tag: 1aeecc612ac8d3a148ea71a333adb4eec7c970ff, replicas: 1, grpc: true, http: false, metricsEnabled: false, hpaEnabled: false, roleArn: "arn:aws:iam::633597729239:role/candle-dev-batch", dbSecret: "candle/dev/rds/batch", dbEnvPrefix: "BATCH", env: [{name: "BATCH_TRADING_ENABLED", value: "true"}, {name: "BATCH_PORTFOLIO_EOD_ENABLED", value: "true"}, {name: "BATCH_STOCK_SYNC_ENABLED", value: "true"}]}
@@ -54,6 +60,7 @@ spec:
               enabled: {{ .http }}
             grpc:
               enabled: {{ .grpc }}
+              health: {{ if hasKey . "grpcHealth" }}{{ .grpcHealth }}{{ else }}true{{ end }}
             healthPath: {{ default "/actuator/health" .healthPath }}
             metrics:
               enabled: {{ .metricsEnabled }}
