@@ -20,7 +20,7 @@ spec:
           - {name: mission-service, tag: ad8fd2d1cd3edb41524236fa88c5ae06b9211906, grpc: true, http: true, metricsEnabled: true, hpaEnabled: true, roleArn: "arn:aws:iam::633597729239:role/candle-dev-mission", dbSecret: "candle/dev/rds/mission", dbEnvPrefix: "MISSION"}
           - {name: learning-service, tag: ad8fd2d1cd3edb41524236fa88c5ae06b9211906, grpc: true, http: true, metricsEnabled: true, hpaEnabled: true, roleArn: "arn:aws:iam::633597729239:role/candle-dev-learning", dbSecret: "candle/dev/rds/learning", dbEnvPrefix: "LEARNING"}
           - {name: market-service, tag: ad8fd2d1cd3edb41524236fa88c5ae06b9211906, grpc: true, http: true, metricsEnabled: true, hpaEnabled: true, roleArn: "arn:aws:iam::633597729239:role/candle-dev-market", dbSecret: "candle/dev/timescale/market", dbEnvPrefix: "MARKET", appSecret: "candle/dev/market"}
-          - {name: notification-service, tag: ad8fd2d1cd3edb41524236fa88c5ae06b9211906, grpc: true, http: true, metricsEnabled: true, hpaEnabled: true, roleArn: "arn:aws:iam::633597729239:role/candle-dev-notification", dbSecret: "candle/dev/rds/notification", dbEnvPrefix: "NOTIFICATION"}
+          - {name: notification-service, tag: ad8fd2d1cd3edb41524236fa88c5ae06b9211906, grpc: true, http: true, metricsEnabled: true, hpaEnabled: true, roleArn: "arn:aws:iam::633597729239:role/candle-dev-notification", dbSecret: "candle/dev/rds/notification", dbEnvPrefix: "NOTIFICATION", firebaseCredentialsSecret: "notification-firebase"}
           - {name: stock-service, tag: ad8fd2d1cd3edb41524236fa88c5ae06b9211906, grpc: true, http: true, metricsEnabled: true, hpaEnabled: true, roleArn: "arn:aws:iam::633597729239:role/candle-dev-stock", dbSecret: "candle/dev/rds/stock", dbEnvPrefix: "STOCK", appSecret: "candle/dev/stock"}
           - {name: wishlist-service, tag: ad8fd2d1cd3edb41524236fa88c5ae06b9211906, grpc: true, http: true, metricsEnabled: true, hpaEnabled: true, roleArn: "arn:aws:iam::633597729239:role/candle-dev-wishlist", dbSecret: "candle/dev/rds/wishlist", dbEnvPrefix: "WISHLIST"}
           - {name: news-service, tag: ad8fd2d1cd3edb41524236fa88c5ae06b9211906, grpc: true, http: true, metricsEnabled: true, hpaEnabled: true, roleArn: "arn:aws:iam::633597729239:role/candle-dev-news", dbSecret: "candle/dev/rds/news", dbEnvPrefix: "NEWS"}
@@ -64,6 +64,7 @@ spec:
               roleArn: {{ .roleArn | quote }}
             dbSecret: {{ .dbSecret | quote }}
             dbEnvPrefix: {{ default "" .dbEnvPrefix | quote }}
+            firebaseCredentialsSecret: {{ default "" .firebaseCredentialsSecret | quote }}
             kafkaBootstrap: "b-1.candledev.3ba4w8.c2.kafka.ap-northeast-2.amazonaws.com:9098,b-2.candledev.3ba4w8.c2.kafka.ap-northeast-2.amazonaws.com:9098"
             redis:
               rankingHost: "master.candle-dev-ranking.cq8heh.apn2.cache.amazonaws.com"

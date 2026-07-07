@@ -32,6 +32,8 @@ serviceAccount:
 dbSecret: ""       # 예: candle/dev/rds/trading
 dbEnvPrefix: ""    # 예: TRADING → TRADING_DB_URL/USERNAME/PASSWORD도 함께 주입
 
+firebaseCredentialsSecret: ""
+
 kafkaBootstrap: ""
 
 redis:

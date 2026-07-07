@@ -71,6 +71,10 @@ spec:
             - name: GRPC_SERVER_PORT
               value: "{{ .Values.grpc.port }}"
             {{- end }}
+            {{- if .Values.firebaseCredentialsSecret }}
+            - name: FIREBASE_CREDENTIALS_PATH
+              value: "file:/app/config/firebase/firebase-adminsdk.json"
+            {{- end }}
             {{- if .Values.dbEnvPrefix }}
             - name: {{ .Values.dbEnvPrefix }}_SERVER_PORT
               value: "{{ .Values.port }}"
@@ -205,6 +209,13 @@ spec:
             {{- with .Values.env }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
+          {{- if .Values.firebaseCredentialsSecret }}
+          volumeMounts:
+            - name: firebase-credentials
+              mountPath: /app/config/firebase/firebase-adminsdk.json
+              subPath: firebase-adminsdk.json
+              readOnly: true
+          {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           {{- if .Values.grpc.enabled }}
@@ -250,3 +261,12 @@ spec:
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 6
+      {{- if .Values.firebaseCredentialsSecret }}
+      volumes:
+        - name: firebase-credentials
+          secret:
+            secretName: {{ .Values.firebaseCredentialsSecret }}
+            items:
+              - key: firebase-adminsdk.json
+                path: firebase-adminsdk.json
+      {{- end }}
