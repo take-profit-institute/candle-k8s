@@ -32,6 +32,13 @@ serviceAccount:
 dbSecret: ""       # 예: candle/dev/rds/trading
 dbEnvPrefix: ""    # 예: TRADING → TRADING_DB_URL/USERNAME/PASSWORD도 함께 주입
 
+kafkaBootstrap: ""
+
+redis:
+  rankingHost: ""
+  priceCacheHost: ""
+  marketPubsubHost: ""
+
 # HTTP 헬스 경로 (Spring actuator 기본). Node 등은 override (예: bff → /health)
 healthPath: /actuator/health
 

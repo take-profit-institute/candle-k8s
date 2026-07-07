@@ -53,8 +53,10 @@ spec:
             # 서비스별 server.port(8081~)를 컨테이너에서 8080으로 통일
             - name: SERVER_PORT
               value: "{{ .Values.port }}"
+            {{- if .Values.kafkaBootstrap }}
             - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
-              value: "<MSK_IAM_BOOTSTRAP>"
+              value: {{ .Values.kafkaBootstrap | quote }}
+            {{- end }}
             {{- if .Values.grpc.enabled }}
             - name: GRPC_SERVER_PORT
               value: "{{ .Values.grpc.port }}"
@@ -125,20 +127,26 @@ spec:
                   key: {{ .Values.dbEnvPrefix }}_DB_PASSWORD
             {{- end }}
             {{- if eq .Values.name "ranking-service" }}
+            {{- if .Values.redis.rankingHost }}
             - name: RANKING_REDIS_HOST
-              value: "<REDIS_RANKING_HOST>"
+              value: {{ .Values.redis.rankingHost | quote }}
             - name: RANKING_REDIS_PORT
               value: "6379"
             {{- end }}
+            {{- end }}
             {{- if eq .Values.name "market-service" }}
+            {{- if .Values.redis.priceCacheHost }}
             - name: SPRING_DATA_REDIS_HOST
-              value: "<REDIS_PRICE_CACHE_HOST>"
+              value: {{ .Values.redis.priceCacheHost | quote }}
             - name: SPRING_DATA_REDIS_PORT
               value: "6379"
             {{- end }}
+            {{- end }}
             {{- if eq .Values.name "wishlist-service" }}
+            {{- if .Values.redis.marketPubsubHost }}
             - name: REDIS_URL
-              value: "rediss://<REDIS_MARKET_PUBSUB_HOST>:6379"
+              value: {{ printf "rediss://%s:6379" .Values.redis.marketPubsubHost | quote }}
+            {{- end }}
             - name: NOTIFICATION_GRPC_ADDR
               value: "notification-service:9090"
             {{- end }}

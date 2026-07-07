@@ -64,6 +64,11 @@ spec:
               roleArn: {{ .roleArn | quote }}
             dbSecret: {{ .dbSecret | quote }}
             dbEnvPrefix: {{ default "" .dbEnvPrefix | quote }}
+            kafkaBootstrap: "b-1.candledev.3ba4w8.c2.kafka.ap-northeast-2.amazonaws.com:9098,b-2.candledev.3ba4w8.c2.kafka.ap-northeast-2.amazonaws.com:9098"
+            redis:
+              rankingHost: "master.candle-dev-ranking.cq8heh.apn2.cache.amazonaws.com"
+              priceCacheHost: "master.candle-dev-price-cache.cq8heh.apn2.cache.amazonaws.com"
+              marketPubsubHost: "master.candle-dev-market-pubsub.cq8heh.apn2.cache.amazonaws.com"
             appSecret: {{ default "" .appSecret | quote }}
             albHealthcheckPath: {{ default "" .albHealthcheckPath | quote }}
             {{- with .env }}
