@@ -13,7 +13,7 @@ spec:
     - list:
         elements:
           - {name: auth-service, tag: b9845273ba085a683870155d6b186cb1a84a03e5, grpc: true, http: true, metricsEnabled: true, hpaEnabled: true, roleArn: "arn:aws:iam::633597729239:role/candle-dev-auth", dbSecret: "candle/dev/rds/auth", dbEnvPrefix: "AUTH", appSecret: "candle/dev/auth"}
-          - {name: user-service, tag: 89f47716cac2a7cdec5cbc7c0ec7cf32547f3f67, grpc: true, http: true, metricsEnabled: true, hpaEnabled: true, roleArn: "arn:aws:iam::633597729239:role/candle-dev-users", dbSecret: "candle/dev/rds/users", dbEnvPrefix: "USER"}
+          - {name: user-service, tag: b9845273ba085a683870155d6b186cb1a84a03e5, grpc: true, http: true, metricsEnabled: true, hpaEnabled: true, roleArn: "arn:aws:iam::633597729239:role/candle-dev-users", dbSecret: "candle/dev/rds/users", dbEnvPrefix: "USER"}
           - {name: trading-service, tag: b9845273ba085a683870155d6b186cb1a84a03e5, grpc: true, http: true, metricsEnabled: true, hpaEnabled: true, roleArn: "arn:aws:iam::633597729239:role/candle-dev-trading", dbSecret: "candle/dev/rds/trading", dbEnvPrefix: "TRADING"}
           - {name: portfolio-service, tag: b9845273ba085a683870155d6b186cb1a84a03e5, grpc: true, http: true, metricsEnabled: true, hpaEnabled: true, roleArn: "arn:aws:iam::633597729239:role/candle-dev-portfolio", dbSecret: "candle/dev/rds/portfolio", dbEnvPrefix: "PORTFOLIO"}
           - {name: ranking-service, tag: b9845273ba085a683870155d6b186cb1a84a03e5, grpc: true, http: true, metricsEnabled: true, hpaEnabled: true, roleArn: "arn:aws:iam::633597729239:role/candle-dev-ranking", dbSecret: "candle/dev/rds/ranking", dbEnvPrefix: "RANKING"}
