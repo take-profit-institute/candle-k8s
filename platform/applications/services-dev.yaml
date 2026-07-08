@@ -40,7 +40,7 @@ spec:
           # chat 시크릿 번들(candle/dev/chat)로 envFrom 주입. ALB(ws ingress)가 /chat 타깃을 /actuator/health로 헬스체크.
           # WS 핸드셰이크 JWT 검증은 auth-service JWKS(RS256)로 — AUTH_JWKS_URI/ISSUER/AUDIENCE 미주입 시
           # 기본값(localhost/issuer불일치)으로 빠져 모든 토큰이 unauthorized가 된다(bff와 동일 값).
-          - {name: chatting-service, tag: 1288e9d4c2a85b634200f6d075e9418f0c0c5fe2, grpc: false, http: true, metricsEnabled: true, hpaEnabled: true, roleArn: "", dbSecret: "candle/dev/chat", albHealthcheckPath: "/actuator/health", env: [{name: "AUTH_JWKS_URI", value: "http://auth-service/.well-known/jwks.json"}, {name: "AUTH_JWT_ISSUER", value: "https://api.dev.candle.io.kr"}, {name: "AUTH_JWT_AUDIENCE", value: "candle-api"}]}
+          - {name: chatting-service, tag: 43560309ecf6f354fabc01d04f79ee64905d9dd2, grpc: false, http: true, metricsEnabled: true, hpaEnabled: true, roleArn: "", dbSecret: "candle/dev/chat", albHealthcheckPath: "/actuator/health", env: [{name: "AUTH_JWKS_URI", value: "http://auth-service/.well-known/jwks.json"}, {name: "AUTH_JWT_ISSUER", value: "https://api.dev.candle.io.kr"}, {name: "AUTH_JWT_AUDIENCE", value: "candle-api"}]}
   template:
     metadata:
       name: "svc-{{ .name }}"
