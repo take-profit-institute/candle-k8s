@@ -177,6 +177,9 @@ spec:
             - name: MANAGEMENT_HEALTH_REDIS_ENABLED
               value: {{ .Values.redis.healthEnabled | quote }}
             {{- end }}
+            # 호가 REST refresh 대상 종목 목록은 stock-service catalog에서 조회한다.
+            - name: STOCK_SERVICE_GRPC_ADDRESS
+              value: "static://stock-service:9090"
             {{- end }}
             {{- if eq .Values.name "trading-service" }}
             {{- if .Values.redis.priceCacheHost }}
