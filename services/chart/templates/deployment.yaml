@@ -201,6 +201,9 @@ spec:
             # 포트폴리오 평가금/섹터 구성 계산 시 현재가를 market-service BatchQuotes로 조회한다.
             - name: MARKET_SERVICE_GRPC_ADDRESS
               value: "static://market-service:9090"
+            # 포트폴리오 요약의 현금 잔고는 trading-service AccountService.GetBalance로 조회한다.
+            - name: TRADING_SERVICE_GRPC_ADDRESS
+              value: "static://trading-service:9090"
             {{- end }}
             {{- if eq .Values.name "batch" }}
             - name: BATCH_MARKET_GRPC_TARGET
