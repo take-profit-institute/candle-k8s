@@ -143,6 +143,8 @@ spec:
                   key: {{ .Values.dbEnvPrefix }}_DB_PASSWORD
             {{- end }}
             {{- if eq .Values.name "ranking-service" }}
+            - name: RANKING_PORTFOLIO_GRPC_TARGET
+              value: "static://portfolio-service:9090"
             {{- if .Values.redis.rankingHost }}
             - name: RANKING_REDIS_HOST
               value: {{ .Values.redis.rankingHost | quote }}
