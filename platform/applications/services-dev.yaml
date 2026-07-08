@@ -14,7 +14,7 @@ spec:
         elements:
           - {name: auth-service, tag: 6a1e0f6d36c11a637baa2213694fec2360d236e6, grpc: true, http: true, metricsEnabled: true, hpaEnabled: true, roleArn: "arn:aws:iam::633597729239:role/candle-dev-auth", dbSecret: "candle/dev/rds/auth", dbEnvPrefix: "AUTH", appSecret: "candle/dev/auth"}
           - {name: user-service, tag: 6a1e0f6d36c11a637baa2213694fec2360d236e6, grpc: true, http: true, metricsEnabled: true, hpaEnabled: true, roleArn: "arn:aws:iam::633597729239:role/candle-dev-users", dbSecret: "candle/dev/rds/users", dbEnvPrefix: "USER"}
-          - {name: trading-service, tag: 6a1e0f6d36c11a637baa2213694fec2360d236e6, grpc: true, http: true, metricsEnabled: true, hpaEnabled: true, roleArn: "arn:aws:iam::633597729239:role/candle-dev-trading", dbSecret: "candle/dev/rds/trading", dbEnvPrefix: "TRADING"}
+          - {name: trading-service, tag: c59bfbdc26a65e3ca3bde91870312957d9bcc458, grpc: true, http: true, metricsEnabled: true, hpaEnabled: true, roleArn: "arn:aws:iam::633597729239:role/candle-dev-trading", dbSecret: "candle/dev/rds/trading", dbEnvPrefix: "TRADING"}
           - {name: portfolio-service, tag: 5f372b3b80bd3137a9b26574b55ae9636df2523d, grpc: true, http: true, metricsEnabled: true, hpaEnabled: true, roleArn: "arn:aws:iam::633597729239:role/candle-dev-portfolio", dbSecret: "candle/dev/rds/portfolio", dbEnvPrefix: "PORTFOLIO"}
           - {name: ranking-service, tag: 6a1e0f6d36c11a637baa2213694fec2360d236e6, grpc: true, http: true, metricsEnabled: true, hpaEnabled: true, roleArn: "arn:aws:iam::633597729239:role/candle-dev-ranking", dbSecret: "candle/dev/rds/ranking", dbEnvPrefix: "RANKING"}
           # mission은 gRPC 서버가 없어(HTTP 전용) grpc:true 로 두면 gRPC startupProbe(9090)가
