@@ -218,6 +218,8 @@ spec:
             {{- if eq .Values.name "bff" }}
             - name: GRPC_AUTH_ADDR
               value: "auth-service:9090"
+            - name: AUTH_SERVICE_BASE_URL
+              value: "http://auth-service/api/v1/auth"
             - name: GRPC_USER_ADDR
               value: "user-service:9090"
             - name: GRPC_MARKET_ADDR
