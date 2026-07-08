@@ -7,7 +7,6 @@ resources:
   - peer-authentication.yaml
   - destinationrule-mtls.yaml
   - istio-gateway.yaml
-  - istio-jwt-auth.yaml
   - ws-ingress.yaml
   - externalsecret-debezium.yaml
   - kafka-connect.yaml
