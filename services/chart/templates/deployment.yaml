@@ -231,10 +231,14 @@ spec:
             {{- if eq .Values.name "batch" }}
             - name: BATCH_MARKET_GRPC_TARGET
               value: "static://market-service:9090"
+            - name: BATCH_STOCK_GRPC_TARGET
+              value: "static://stock-service:9090"
             - name: BATCH_TRADING_GRPC_TARGET
               value: "static://trading-service:9090"
             - name: BATCH_PORTFOLIO_GRPC_TARGET
               value: "static://portfolio-service:9090"
+            - name: BATCH_RANKING_GRPC_TARGET
+              value: "static://ranking-service:9090"
             - name: BATCH_SMOKE_ENABLED
               value: "false"
             {{- end }}
