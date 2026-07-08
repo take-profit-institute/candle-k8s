@@ -178,6 +178,23 @@ spec:
               value: {{ .Values.redis.healthEnabled | quote }}
             {{- end }}
             {{- end }}
+            {{- if eq .Values.name "trading-service" }}
+            {{- if .Values.redis.priceCacheHost }}
+            # 시세 pub/sub 구독용 — market-service가 발행하는 Redis(priceCacheHost)와 동일 인스턴스.
+            # ElastiCache in-transit 암호화(TLS) 필수라 SSL 활성.
+            - name: MARKET_REDIS_HOST
+              value: {{ .Values.redis.priceCacheHost | quote }}
+            - name: MARKET_REDIS_PORT
+              value: "6379"
+            - name: SPRING_DATA_REDIS_SSL_ENABLED
+              value: "true"
+            {{- end }}
+            # trading은 Redis(시세 pub/sub)를 필수 의존으로 쓰지 않는다. Redis 다운/미설정이
+            # /actuator/health(liveness)를 DOWN으로 만들어 파드를 crashloop-kill 하지 않도록
+            # 헬스 기여자를 끈다(ranking/market 선례와 동일).
+            - name: MANAGEMENT_HEALTH_REDIS_ENABLED
+              value: "false"
+            {{- end }}
             {{- if eq .Values.name "wishlist-service" }}
             {{- if .Values.redis.marketPubsubHost }}
             - name: REDIS_URL
