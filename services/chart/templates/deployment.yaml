@@ -221,6 +221,9 @@ spec:
             # 포트폴리오 요약의 현금 잔고는 trading-service AccountService.GetBalance로 조회한다.
             - name: TRADING_SERVICE_GRPC_ADDRESS
               value: "static://trading-service:9090"
+            # 보유 종목 메타데이터/섹터 보강은 stock-service StockService로 조회한다.
+            - name: STOCK_SERVICE_GRPC_ADDRESS
+              value: "static://stock-service:9090"
             {{- end }}
             {{- if eq .Values.name "batch" }}
             - name: BATCH_MARKET_GRPC_TARGET
