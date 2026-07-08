@@ -95,6 +95,15 @@ spec:
             host: chatting-service.candle.svc.cluster.local
             port:
               number: 80
+    # 3-1) 시세 실시간 WS(/ws) → bff. (ws.dev ALB로도 가지만 메시 진입 시에도 명시적으로 bff로)
+    - match:
+        - uri:
+            exact: /ws
+      route:
+        - destination:
+            host: bff.candle.svc.cluster.local
+            port:
+              number: 80
     # 4) 그 외 전부 → bff (예: /api/auth/me, /api/account/**, /api/market/** ...)
     - route:
         - destination:
