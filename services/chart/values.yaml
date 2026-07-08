@@ -44,8 +44,9 @@ redis:
   rankingHost: ""
   priceCacheHost: ""
   marketPubsubHost: ""
-  connectTimeout: 1s
-  timeout: 1s
+  # TLS(ElastiCache in-transit) 핸드셰이크 + istio 사이드카 경유라 1s는 부족 → 상향.
+  connectTimeout: 5s
+  timeout: 3s
   healthEnabled: "false"
 
 # HTTP 헬스 경로 (Spring actuator 기본). Node 등은 override (예: bff → /health)

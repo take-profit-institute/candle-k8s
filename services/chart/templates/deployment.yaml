@@ -156,6 +156,9 @@ spec:
               value: {{ .Values.redis.priceCacheHost | quote }}
             - name: SPRING_DATA_REDIS_PORT
               value: "6379"
+            # ElastiCache가 in-transit 암호화(TLS) 필수 → 평문 접속은 핸드셰이크에서 행 걸린다.
+            - name: SPRING_DATA_REDIS_SSL_ENABLED
+              value: "true"
             - name: SPRING_DATA_REDIS_CONNECT_TIMEOUT
               value: {{ .Values.redis.connectTimeout | quote }}
             - name: SPRING_DATA_REDIS_TIMEOUT
