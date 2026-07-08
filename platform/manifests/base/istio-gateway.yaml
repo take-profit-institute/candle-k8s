@@ -85,7 +85,17 @@ spec:
             host: auth-service.candle.svc.cluster.local
             port:
               number: 80
-    # 3) 그 외 전부 → bff (예: /api/auth/me, /api/account/**, /api/market/** ...)
+    # 3) 채팅 → chatting-service (경로 유지). /chat/rooms(REST 방배정) + /chat/ws(WS).
+    #    Istio는 WebSocket Upgrade를 native 지원하므로 WS도 메시로 프록시된다.
+    - match:
+        - uri:
+            prefix: /chat/
+      route:
+        - destination:
+            host: chatting-service.candle.svc.cluster.local
+            port:
+              number: 80
+    # 4) 그 외 전부 → bff (예: /api/auth/me, /api/account/**, /api/market/** ...)
     - route:
         - destination:
             host: bff.candle.svc.cluster.local
