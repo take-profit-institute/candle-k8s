@@ -179,6 +179,13 @@ spec:
             - name: STOCK_SERVICE_GRPC_ADDRESS
               value: "static://stock-service:9090"
             {{- end }}
+            {{- if eq .Values.name "trading-service" }}
+            # 시장가 즉시 체결 시 실시간 현재가(market-service GetQuote) + 전일종가(stock-service ChartService)
+            - name: MARKET_SERVICE_GRPC_ADDRESS
+              value: "static://market-service:9090"
+            - name: CHART_SERVICE_GRPC_ADDRESS
+              value: "static://stock-service:9090"
+            {{- end }}
             {{- if eq .Values.name "batch" }}
             - name: BATCH_MARKET_GRPC_TARGET
               value: "static://market-service:9090"
