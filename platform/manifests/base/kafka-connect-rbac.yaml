@@ -1,0 +1,26 @@
+# Debezium connect 워커(SA: debezium-connect)가 KubernetesSecretConfigProvider 로
+# 커넥터 config의 ${secrets:kafka/debezium-db:...} 를 읽으려면 해당 Secret GET 권한이 필요하다.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: debezium-connect-secrets
+  namespace: kafka
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: ["debezium-db"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: debezium-connect-secrets
+  namespace: kafka
+subjects:
+  - kind: ServiceAccount
+    name: debezium-connect
+    namespace: kafka
+roleRef:
+  kind: Role
+  name: debezium-connect-secrets
+  apiGroup: rbac.authorization.k8s.io
