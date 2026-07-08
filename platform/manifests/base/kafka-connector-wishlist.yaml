@@ -27,6 +27,7 @@ spec:
     transforms.outbox.route.topic.replacement: ${routedByValue}
     transforms.outbox.table.field.event.key: aggregate_id
     transforms.outbox.table.field.event.type: event_type
-    transforms.outbox.table.field.event.timestamp: occurred_at
+    # occurred_at 이 timestamptz(→Debezium STRING) 라 EventRouter의 event.timestamp(INT64 요구)로
+    # 못 쓴다. 매핑 생략(레코드 타임스탬프만 기본값 사용). notification/auth 와 동일 패턴.
     value.converter: org.apache.kafka.connect.json.JsonConverter
     value.converter.schemas.enable: false
