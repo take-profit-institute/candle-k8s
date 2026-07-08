@@ -16,7 +16,7 @@ spec:
           - {name: user-service, tag: 511b487062440f8b20d1284274d80eca40e33f15, grpc: true, http: true, metricsEnabled: true, hpaEnabled: true, roleArn: "arn:aws:iam::633597729239:role/candle-dev-users", dbSecret: "candle/dev/rds/users", dbEnvPrefix: "USER"}
           - {name: trading-service, tag: 5e73bc1b1738dc299a7fbc0427f3361309118798, grpc: true, http: true, metricsEnabled: true, hpaEnabled: true, roleArn: "arn:aws:iam::633597729239:role/candle-dev-trading", dbSecret: "candle/dev/rds/trading", dbEnvPrefix: "TRADING"}
           - {name: portfolio-service, tag: 5f372b3b80bd3137a9b26574b55ae9636df2523d, grpc: true, http: true, metricsEnabled: true, hpaEnabled: true, roleArn: "arn:aws:iam::633597729239:role/candle-dev-portfolio", dbSecret: "candle/dev/rds/portfolio", dbEnvPrefix: "PORTFOLIO"}
-          - {name: ranking-service, tag: 511b487062440f8b20d1284274d80eca40e33f15, grpc: true, http: true, metricsEnabled: true, hpaEnabled: true, roleArn: "arn:aws:iam::633597729239:role/candle-dev-ranking", dbSecret: "candle/dev/rds/ranking", dbEnvPrefix: "RANKING"}
+          - {name: ranking-service, tag: 6a1e0f6d36c11a637baa2213694fec2360d236e6, grpc: true, http: true, metricsEnabled: true, hpaEnabled: true, roleArn: "arn:aws:iam::633597729239:role/candle-dev-ranking", dbSecret: "candle/dev/rds/ranking", dbEnvPrefix: "RANKING"}
           # mission은 gRPC 서버가 없어(HTTP 전용) grpc:true 로 두면 gRPC startupProbe(9090)가
           # 200s 예산 내 통과 못해 kill→재기동 무한루프. bff/chatting 처럼 http 전용으로 처리.
           # (추후 실제 gRPC 서버 구현 시 grpc:true 로 되돌린다)
