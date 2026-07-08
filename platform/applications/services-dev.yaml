@@ -29,7 +29,7 @@ spec:
           # news는 gRPC 서버는 뜨지만 grpc.health.v1.Health 를 등록하지 않아 gRPC probe가
           # UNIMPLEMENTED로 실패→재기동 무한루프. gRPC Service 포트(9090)는 유지하되(=BFF가 계속 호출)
           # startup/readiness probe만 HTTP(actuator)로 전환. (앱에서 gRPC 헬스 서비스 켜면 grpcHealth 제거)
-          - {name: news-service, tag: b9845273ba085a683870155d6b186cb1a84a03e5, grpc: true, grpcHealth: false, http: true, metricsEnabled: true, hpaEnabled: true, roleArn: "arn:aws:iam::633597729239:role/candle-dev-news", dbSecret: "candle/dev/rds/news", dbEnvPrefix: "NEWS"}
+          - {name: news-service, tag: 511b487062440f8b20d1284274d80eca40e33f15, grpc: true, grpcHealth: false, http: true, metricsEnabled: true, hpaEnabled: true, roleArn: "arn:aws:iam::633597729239:role/candle-dev-news", dbSecret: "candle/dev/rds/news", dbEnvPrefix: "NEWS"}
           # batch는 상시 gRPC 서버(replica=1, HPA off). 스케줄은 앱 내부 @Scheduled가 담당(CronJob 아님).
           # 스케줄러 단일 실행 보장을 위해 replica=1 고정. 필요한 잡만 BATCH_*_ENABLED로 켠다.
           - {name: batch, tag: b9845273ba085a683870155d6b186cb1a84a03e5, replicas: 1, grpc: true, http: false, metricsEnabled: false, hpaEnabled: false, roleArn: "arn:aws:iam::633597729239:role/candle-dev-batch", dbSecret: "candle/dev/rds/batch", dbEnvPrefix: "BATCH", env: [{name: "BATCH_TRADING_ENABLED", value: "true"}, {name: "BATCH_PORTFOLIO_EOD_ENABLED", value: "true"}, {name: "BATCH_STOCK_SYNC_ENABLED", value: "true"}, {name: "BATCH_MARKET_ORDER_BOOK_ENABLED", value: "true"}]}
