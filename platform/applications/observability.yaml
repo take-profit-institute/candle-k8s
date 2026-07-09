@@ -14,6 +14,15 @@ spec:
       values: |
         grafana:
           enabled: true
+          # 로그 조회용 Loki 데이터소스 (Explore/대시보드에서 LogQL)
+          additionalDataSources:
+            - name: Loki
+              type: loki
+              uid: loki
+              access: proxy
+              url: http://loki.observability.svc:3100
+              jsonData:
+                maxLines: 1000
         prometheus:
           prometheusSpec:
             # 모든 네임스페이스의 ServiceMonitor/PodMonitor 수집
@@ -47,8 +56,98 @@ spec:
             replication_factor: 1
           storage:
             type: filesystem
+          # 6.x 필수: 스키마 미지정 시 기동 실패
+          schemaConfig:
+            configs:
+              - from: "2024-04-01"
+                store: tsdb
+                object_store: filesystem
+                schema: v13
+                index:
+                  prefix: loki_index_
+                  period: 24h
         singleBinary:
           replicas: 1
+        # SimpleScalable 타깃 0으로 (SingleBinary 와 동시 >0 이면 validate.yaml 에러)
+        read:
+          replicas: 0
+        write:
+          replicas: 0
+        backend:
+          replicas: 0
+        # dev 경량화: 캐시/게이트웨이/카나리/테스트 비활성
+        chunksCache:
+          enabled: false
+        resultsCache:
+          enabled: false
+        lokiCanary:
+          enabled: false
+        test:
+          enabled: false
+        gateway:
+          enabled: false
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: observability
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }
+    syncOptions: [CreateNamespace=true]
+---
+# Grafana Alloy — 파드 로그 수집기(DaemonSet). 각 노드의 /var/log/pods 를 tail 해
+# Loki 로 push 한다. 노드-로컬 파일만 읽으므로 중복 없음.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: alloy
+  namespace: argocd
+spec:
+  project: candle
+  source:
+    repoURL: https://grafana.github.io/helm-charts
+    chart: alloy
+    targetRevision: 1.10.0
+    helm:
+      values: |
+        controller:
+          type: daemonset
+        alloy:
+          mounts:
+            varlog: true
+          configMap:
+            content: |
+              discovery.kubernetes "pod" {
+                role = "pod"
+              }
+
+              discovery.relabel "pod_logs" {
+                targets = discovery.kubernetes.pod.targets
+                rule { source_labels = ["__meta_kubernetes_namespace"]          target_label = "namespace" }
+                rule { source_labels = ["__meta_kubernetes_pod_name"]           target_label = "pod" }
+                rule { source_labels = ["__meta_kubernetes_pod_container_name"] target_label = "container" }
+                rule { source_labels = ["__meta_kubernetes_pod_label_app"]      target_label = "app" }
+                rule {
+                  source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
+                  separator     = "/"
+                  action        = "replace"
+                  replacement   = "/var/log/pods/*$1/*.log"
+                  target_label  = "__path__"
+                }
+              }
+
+              local.file_match "pod_logs" {
+                path_targets = discovery.relabel.pod_logs.output
+              }
+
+              loki.source.file "pod_logs" {
+                targets    = local.file_match.pod_logs.targets
+                forward_to = [loki.write.default.receiver]
+              }
+
+              loki.write "default" {
+                endpoint {
+                  url = "http://loki.observability.svc:3100/loki/api/v1/push"
+                }
+              }
   destination:
     server: https://kubernetes.default.svc
     namespace: observability
