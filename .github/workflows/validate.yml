@@ -32,12 +32,32 @@ jobs:
             --set dbSecret=candle/dev/rds/trading \
             --set serviceAccount.roleArn=arn:aws:iam::0:role/r > /dev/null
 
+      # kubeconform 은 코어·CRD 스키마를 모두 raw.githubusercontent 에서 런타임 다운로드하는데,
+      # GitHub 레이트리밋으로 그 요청이 네트워크 실패하면(코어 StorageClass 조차) 하드 에러가 난다.
+      # 스키마를 캐시에 영속화해 웜캐시에선 네트워크 없이 결정적으로 검증한다.
+      - name: Cache kubeconform schemas
+        uses: actions/cache@v4
+        with:
+          path: /tmp/kubeconform-cache
+          # 스키마 갱신이 필요하면 키 뒤 버전만 올린다(v1→v2).
+          key: kubeconform-schemas-v1
+
       - name: kubeconform (CRD skip)
-        # CRD(Strimzi/Istio/External-Secrets)는 원격 스키마가 없거나 raw.githubusercontent
-        # 레이트리밋으로 다운로드가 네트워크 실패하면 -ignore-missing-schemas 로도 안 걸러지고
-        # 하드 에러가 난다(스키마 없음≠다운로드 실패). CRD kind 를 명시적으로 skip 해
-        # 원격 의존을 제거한다 — CRD 정합성은 각 오퍼레이터 admission webhook 이 검증한다.
+        # CRD(Strimzi/Istio/External-Secrets)는 원격 스키마가 없어 -skip 으로 원격 의존을 없앤다
+        # (CRD 정합성은 각 오퍼레이터 admission webhook 이 검증). 코어 스키마는 -cache 로 재사용하고,
+        # 콜드캐시 첫 실행의 일시적 다운로드 실패를 대비해 최대 3회 재시도한다.
         run: |
-          kubectl kustomize platform/manifests/overlays/dev | \
-            kubeconform -strict -ignore-missing-schemas -summary \
-              -skip KafkaConnect,KafkaConnector,ExternalSecret,ClusterSecretStore,Gateway,VirtualService,DestinationRule,PeerAuthentication
+          set -o pipefail
+          mkdir -p /tmp/kubeconform-cache
+          validate() {
+            kubectl kustomize platform/manifests/overlays/dev | \
+              kubeconform -strict -ignore-missing-schemas -summary \
+                -cache /tmp/kubeconform-cache \
+                -skip KafkaConnect,KafkaConnector,ExternalSecret,ClusterSecretStore,Gateway,VirtualService,DestinationRule,PeerAuthentication
+          }
+          for i in 1 2 3; do
+            validate && exit 0
+            echo "::warning::kubeconform transient schema-download failure (attempt $i/3), retrying..."
+            sleep $((i * 5))
+          done
+          exit 1
