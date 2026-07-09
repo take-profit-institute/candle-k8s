@@ -33,6 +33,11 @@ jobs:
             --set serviceAccount.roleArn=arn:aws:iam::0:role/r > /dev/null
 
       - name: kubeconform (CRD skip)
+        # CRD(Strimzi/Istio/External-Secrets)는 원격 스키마가 없거나 raw.githubusercontent
+        # 레이트리밋으로 다운로드가 네트워크 실패하면 -ignore-missing-schemas 로도 안 걸러지고
+        # 하드 에러가 난다(스키마 없음≠다운로드 실패). CRD kind 를 명시적으로 skip 해
+        # 원격 의존을 제거한다 — CRD 정합성은 각 오퍼레이터 admission webhook 이 검증한다.
         run: |
           kubectl kustomize platform/manifests/overlays/dev | \
-            kubeconform -strict -ignore-missing-schemas -summary
+            kubeconform -strict -ignore-missing-schemas -summary \
+              -skip KafkaConnect,KafkaConnector,ExternalSecret,ClusterSecretStore,Gateway,VirtualService,DestinationRule,PeerAuthentication
